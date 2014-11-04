@@ -54,6 +54,8 @@
 #include "sd.h"
 #include "display.h"
 #include "simulator.h"
+#include "lcd.h"
+
 
 #ifdef SIMINFO
   #include "../simulavr/src/simulavr_info.h"
