@@ -128,7 +128,7 @@ void init(void) {
   #ifdef DISPLAY
     display_init();
     display_clear();
-    i2c_test();
+    display_greeting();
   #endif
 
 	// say hi to host

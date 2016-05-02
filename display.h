@@ -23,6 +23,13 @@
 
     #define DISPLAY
 
+  #elif defined DISPLAY_TYPE_HD44780
+
+    #define DISPLAY_LINES               2
+    #define DISPLAY_SYMBOLS_PER_LINE    16
+
+    #define DISPLAY
+
   #elif defined DISPLAY_TYPE_LCD1302
 
     #error Display type LCD1302 not yet supported.
@@ -39,6 +46,7 @@ void display_init(void);
 void display_tick(void);
 void display_clear(void);
 
+void display_greeting(void);
 void display_clock(void);
 void display_set_cursor(uint8_t line, uint8_t column);
 void display_writechar(uint8_t data);
