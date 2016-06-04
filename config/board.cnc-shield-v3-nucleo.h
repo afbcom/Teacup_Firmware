@@ -98,7 +98,7 @@
   a LED in hardware), see
   http://reprap.org/wiki/Teacup_Firmware#Doing_precision_profiling
 */
-//#define DEBUG_LED_PIN            DIO21
+#define DEBUG_LED_PIN            PA_5
 
 /** \def SD_CARD_SELECT_PIN
 

@@ -5,11 +5,7 @@
 #ifndef	_PINIO_H
 #define	_PINIO_H
 
-#define STM32F401xE 1
-
 #include	"config_wrapper.h"
-//#include 	"stm32f4xx.h"
-#include	"stm32f4xx_hal_gpio.h"
 
 #ifndef MASK
   /// MASKING- returns \f$2^PIN\f$
@@ -110,17 +106,16 @@
     splitted in 2x16bit. Much easier to handle. Low-bit for HIGH and high-bit for LOW.
   */
   /// Read a pin.
-  //#define _READ(IO) 		(IO ## _PORT->IDR & MASK(IO ## _PIN))
-  #define _READ(IO)             HAL_GPIO_ReadPin( (IO ## _PORT ) , ( IO ## _PIN ) )
+  #define _READ(IO) 		(IO ## _PORT->IDR & MASK(IO ## _PIN))
   /// Write to a pin.
-  //#define _WRITE(IO, v) \
-  //  do { \
-  //    if (v) \
-  //    	IO ## _PORT->BSRR = MASK(IO ## _PIN); \
-  //    else \
-  //    	IO ## _PORT->BSRR = MASK((IO ## _PIN + 16)); \
-  //  } while (0)
-  #define _WRITE(IO, v) 	HAL_GPIO_WritePin( (IO ## _PORT), ( IO ## _PIN ), (v) )
+  #define _WRITE(IO, v) \
+    do { \
+      if (v) \
+      	IO ## _PORT->BSRR = MASK(IO ## _PIN); \
+      else \
+      	IO ## _PORT->BSRR = MASK((IO ## _PIN + 16)); \
+    } while (0)
+
   /** 
     Set pins as input/output. Standard is input. MODER ist 32bit. 2bits for every pin.
   */

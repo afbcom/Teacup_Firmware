@@ -19,6 +19,7 @@ void cpu_init() {
                   RCC_AHB1ENR_GPIOCEN | 
                   RCC_AHB1ENR_GPIODEN | 
                   RCC_AHB1ENR_GPIOHEN;
+
 }
 
 #endif /* defined TEACUP_C_INCLUDE && defined __ARMEL__ */

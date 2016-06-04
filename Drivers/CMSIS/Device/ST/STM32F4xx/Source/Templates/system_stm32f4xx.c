@@ -67,7 +67,7 @@
 #include "stm32f4xx.h"
 
 #if !defined  (HSE_VALUE) 
-  #define HSE_VALUE    ((uint32_t)25000000) /*!< Default value of the External oscillator in Hz */
+  #define HSE_VALUE    ((uint32_t)8000000) /*!< Default value of the External oscillator in Hz */
 #endif /* HSE_VALUE */
 
 #if !defined  (HSI_VALUE)
@@ -199,6 +199,8 @@ void SystemInit(void)
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
+
+  SetSysClock();
 }
 
 /**
@@ -759,3 +761,83 @@ void SystemInit_ExtMemCtl(void)
   * @}
   */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+void SetSysClock(void)
+{
+  
+  /* The voltage scaling allows optimizing the power consumption when the device is
+     clocked below the maximum system frequency, to update the voltage scaling value
+     regarding system frequency refer to product datasheet. */
+  RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+
+  MODIFY_REG(PWR->CR, PWR_CR_VOS, PWR_CR_VOS_1);
+  
+  /* Enable HSE oscillator and activate PLL with HSE as source */
+  /*------------------------------- HSE Configuration ------------------------*/
+
+  /* Reset HSEON and HSEBYP bits before configuring the HSE --------------*/
+  RCC->CR &= ~(RCC_CR_HSEON);
+  //__HAL_RCC_HSE_CONFIG(RCC_HSE_OFF);
+
+  /* Wait till HSE is disabled */
+  while(RCC->CR & RCC_CR_HSERDY);
+  
+  /* Set the new HSE configuration ---------------------------------------*/
+  RCC->CR |= RCC_CR_HSEON;
+  
+  /* Wait till HSE is ready */
+  while(!(RCC->CR & RCC_CR_HSERDY));
+
+  /*-------------------------------- PLL Configuration -----------------------*/
+  /* Disable the main PLL. */
+  RCC->CR &= ~(RCC_CR_PLLON);
+  
+  /* Wait till PLL is ready */
+  while(RCC->CR & RCC_CR_PLLRDY);
+
+  /* Configure the main PLL clock source, multiplication and division factors. */
+  // PLLM_2:      VCO input clock = 2 MHz (8 MHz / 4)
+  // PLLN_6/7:    VCO output clock = 384 MHz (2 MHz * 192)
+  // PLLP_0:      PLLCLK = 96 MHz (384 MHz / 4)
+  // PLLQ_3:      USB clock = 48 MHz (384 MHz / 8) --> 48MHz is best choice for USB
+  RCC->PLLCFGR =  RCC_PLLCFGR_PLLSRC_HSE | RCC_PLLCFGR_PLLM_2 | \
+                  RCC_PLLCFGR_PLLN_6 | RCC_PLLCFGR_PLLN_7 | \
+                  RCC_PLLCFGR_PLLP_0 | \
+                  RCC_PLLCFGR_PLLQ_3;
+
+  /* Enable the main PLL. */
+  RCC->CR |= RCC_CR_PLLON;
+  
+  /* Wait till PLL is ready */
+  while(!(RCC->CR & RCC_CR_PLLRDY));
+
+  /* To correctly read data from FLASH memory, the number of wait states (LATENCY)
+    must be correctly programmed according to the frequency of the CPU clock
+    (HCLK) and the supply voltage of the device. */
+
+  /* Increasing the CPU frequency */
+  if(FLASH_ACR_LATENCY_3WS > (FLASH->ACR & FLASH_ACR_LATENCY))
+  {
+    /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+    MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, FLASH_ACR_LATENCY_3WS);
+    /*-------------------------- HCLK Configuration --------------------------*/
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE, RCC_CFGR_HPRE_DIV1);
+    /*------------------------- SYSCLK Configuration ---------------------------*/
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, RCC_CFGR_SW_PLL);
+  }
+  /* Decreasing the CPU frequency */
+  else
+  {
+    /*-------------------------- HCLK Configuration --------------------------*/
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE, RCC_CFGR_HPRE_DIV1);
+    /*------------------------- SYSCLK Configuration -------------------------*/
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, RCC_CFGR_SW_PLL);
+    /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+    MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, FLASH_ACR_LATENCY_3WS);
+  }
+
+  /*-------------------------- PCLK1 Configuration ---------------------------*/
+  MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, RCC_CFGR_PPRE1_DIV2);
+  /*-------------------------- PCLK2 Configuration ---------------------------*/
+  MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV1);
+}
