@@ -279,10 +279,7 @@ void dda_create(DDA *dda, TARGET *target) {
 		stepper_enable();
 		x_enable();
 		y_enable();
-    #ifndef Z_AUTODISABLE
-      z_enable();
-    // #else Z is enabled in dda_start().
-    #endif
+		// Z is enabled in dda_start()
 		e_enable();
 
 		// since it's unusual to combine X, Y and Z changes in a single move on reprap, check if we can use simpler approximations before trying the full 3d approximation.
@@ -495,10 +492,8 @@ void dda_start(DDA *dda) {
 	if ( ! dda->nullmove) {
 		// get ready to go
 		psu_timeout = 0;
-    #ifdef Z_AUTODISABLE
-      if (dda->delta[Z])
-        z_enable();
-    #endif
+    if (dda->delta[Z])
+			z_enable();
 		if (dda->endstop_check)
 			endstops_on();
 
@@ -720,10 +715,8 @@ void dda_step(DDA *dda) {
 		#ifdef	DC_EXTRUDER
 			heater_set(DC_EXTRUDER, 0);
 		#endif
-    #ifdef Z_AUTODISABLE
-      // Z stepper is only enabled while moving.
-      z_disable();
-    #endif
+		// z stepper is only enabled while moving
+		z_disable();
 
     // No need to restart timer here.
     // After having finished, dda_start() will do it.

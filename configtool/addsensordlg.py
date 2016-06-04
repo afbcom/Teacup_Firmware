@@ -509,7 +509,7 @@ class AddSensorDlg(wx.Dialog):
     self.chPresets.SetSelection(0)
 
   def selectSensorType(self, lbl):
-    if lbl == "Thermistor" or lbl == "MCP3008":
+    if lbl == "Thermistor":
       self.currentMode = MODE_THERMISTOR
     else:
       self.currentMode = MODE_NONTHERM

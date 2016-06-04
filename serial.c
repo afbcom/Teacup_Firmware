@@ -12,7 +12,8 @@
 
 #define TEACUP_C_INCLUDE
 #include "serial-avr.c"
-#include "serial-arm.c"
+#include "serial-arm_lpc11xx.c"
+#include "serial-arm_stm32f4xx.c"
 #undef TEACUP_C_INCLUDE
 
 
