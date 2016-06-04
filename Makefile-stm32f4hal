@@ -183,13 +183,15 @@ LDFLAGS += -Wl,--gc-sections
 
 LIBS  = -lm
 
+all: stm32f4hal
+
 -include Makefile-common
 
 # Architecture specific targets
 
-.PHONY: all program size
+.PHONY: stm32f4hal all program size
 
-all: stm32f4hal $(PROGRAM).hex $(BUILDDIR)/$(PROGRAM).lst $(BUILDDIR)/$(PROGRAM).sym size
+all: $(PROGRAM).hex $(BUILDDIR)/$(PROGRAM).lst $(BUILDDIR)/$(PROGRAM).sym size
 
 stm32f4hal:
 	@$(foreach dir,$(SUBDIRS),mkdir -p $(BUILDDIR)/$(dir))
