@@ -5,20 +5,21 @@
   To be included from cpu.c, for details see there.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__
+#if defined TEACUP_C_INCLUDE && defined __ARM_HALF4__
   
 #include "config_wrapper.h"
+#include "stm32f4xx_hal_conf.h"    
 
 void cpu_init() {
   /**
     Enable all periphals.
   */
     // Enable power and clocking for all GPIO
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 
-                  RCC_AHB1ENR_GPIOBEN | 
-                  RCC_AHB1ENR_GPIOCEN | 
-                  RCC_AHB1ENR_GPIODEN | 
-                  RCC_AHB1ENR_GPIOHEN;
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOH_CLK_ENABLE();
 
 }
 
