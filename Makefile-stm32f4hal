@@ -173,7 +173,6 @@ else ifeq ($(HAL), TRUE)
   CFLAGS += -mthumb-interwork
   CFLAGS += -D__CORTEX_M4
   CFLAGS += -DARM_MATH_CM4
-  CFLAGS += -D__FPU_PRESENT=1
   CFLAGS += -D__ARM_STM32F411__
   CFLAGS += $(addprefix -I,$(SUBDIRS))
 endif
