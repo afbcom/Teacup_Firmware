@@ -3,7 +3,7 @@
   \brief Manage heaters, including PID and PWM, ARM specific part.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__
+#if defined TEACUP_C_INCLUDE && defined __ARM_HALF4__
 
 #include "cmsis-stm32f4xx.h"
 #include "pinio.h"
