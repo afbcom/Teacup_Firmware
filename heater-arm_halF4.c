@@ -154,6 +154,11 @@ void heater_init() {
       - PIOC_9   PWM3/4             02                SDA3
       
   */
+
+  GPIO_InitTypeDef  igpio;
+  TIM_HandleTypeDef htim;
+  TIM_OC_InitTypeDef sConfigOC;
+
   // Auto-generate pin setup.
   #undef DEFINE_HEATER 
   #define DEFINE_HEATER(name, pin, invert, pwm) \
@@ -161,55 +166,51 @@ void heater_init() {
       uint32_t freq;                                                                     \
       uint8_t macro_mask;                                                                \
       if (pin ## _TIMER == TIM1) {                                                       \
-        RCC->APB1ENR |= RCC_APB2ENR_TIM1EN; }                     /* turn on TIM1     */ \
+        __HAL_RCC_TIM1_CLK_ENABLE();}                     /* turn on TIM1     */ \
       else if (pin ## _TIMER == TIM2) {                                                  \
-        RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; }                     /* turn on TIM2     */ \
+       __HAL_RCC_TIM2_CLK_ENABLE(); }                     /* turn on TIM2     */ \
       else if (pin ## _TIMER == TIM3) {                                                  \
-        RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; }                     /* turn on TIM3     */ \
+       __HAL_RCC_TIM3_CLK_ENABLE(); }                     /* turn on TIM3     */ \
       else if (pin ## _TIMER == TIM4) {                                                  \
-        RCC->APB1ENR |= RCC_APB1ENR_TIM4EN; }                     /* turn on TIM4     */ \
-      /* TIM5 is for stepper, TIM9, TIM10 and TIM11 are not used                      */ \
-      pin ## _PORT->MODER &= ~(3 << (pin ## _PIN << 1));      /*  reset pin mode      */ \
-      pin ## _PORT->MODER |= (2 << (pin ## _PIN << 1));       /*  pin mode to AF      */ \
-      pin ## _PORT->OSPEEDR |= (3 << (pin ## _PIN << 1));     /*  high speed          */ \
-      macro_mask = pin ## _PIN < 8 ? (pin ## _PIN) : (pin ## _PIN - 8);                  \
-      /* we have to registers for AFR. ARF[0] for the first 8, ARF[1] for the second 8*/ \
-      /* also we use this to keep the compiler happy and don't shift > 32             */ \
-      if (pin ## _PIN < 8) {                                                             \
-        pin ## _PORT->AFR[0] |= pin ## _AF << (macro_mask * 4);                          \
-      } else {                                                                           \
-        pin ## _PORT->AFR[1] |= pin ## _AF << (macro_mask * 4);                          \
-      }                                                                                  \
-      /* AFR is a 64bit register, first half are for pin 0-7, second half 8-15        */ \
-      pin ## _TIMER->CR1 |= TIM_CR1_ARPE;                     /* auto-reload preload  */ \
-      pin ## _TIMER->ARR = PWM_SCALE - 1;             /* reset on auto reload at 254  */ \
-                        /* PWM_SCALE - 1, so CCR = 255 is full off.                   */ \
-      pin ## _TIMER-> EXPANDER(CCR, pin ## _CHANNEL,) = 0;               /* start off */ \
+       __HAL_RCC_TIM4_CLK_ENABLE(); }                     /* turn on TIM4     */ \
+
+	
+  	  
+     //Pin set-up
+      igpio.Pin = GPIO_PIN_ ## ( pin ## _PIN);
+	  igpio.Mode = GPIO_MODE_AF_PP;
+	  igpio.Pull = GPIO_PULLUP;
+	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	   //Not sure if this works but we want GPIO_AFx_TIMx
+	  igpio.Alternate = GPIO_AF ##  ( pin ## _AF ) ## _ ## (pin ## _TIMER);
+	  HAL_GPIO_Init( pin ## _PORT , &igpio); 
+
       freq = F_CPU / PWM_SCALE / (pwm ? pwm : 1);                 /* Figure PWM freq. */ \
       if (freq > 65535)                                                                  \
         freq = 65535;                                                                    \
       if (freq < 1)                                                                      \
-        freq = 1;                                                                        \
-      pin ## _TIMER->PSC = freq - 1;                          /* 1kHz                 */ \
-      macro_mask = pin ## _CHANNEL > 2 ? 2 : 1;                                          \
-      if (macro_mask == 1) {                                                             \
-        pin ## _TIMER->CCMR1 |= 0x0D << (3 + (8 * (pin ## _CHANNEL / macro_mask - 1)));  \
-        /* ch 2 / mm 1 - 1 = 1, ch 1 / mm 1 - 1 = 0*/                                    \
-      } else {                                                                           \
-        pin ## _TIMER->CCMR2 |= 0x0D << (3 + (8 * (pin ## _CHANNEL / macro_mask - 1)));  \
-        /* ch 4 / mm 2 - 1 = 1, ch 3 / mm 2 - 1 = 0*/                                    \
-      }                                                                                  \
-      pin ## _TIMER->CCER |= EXPANDER(TIM_CCER_CC, pin ## _CHANNEL, E);                  \
-      /* output enable */                                                                \
-      if (pin ## _INVERT ^ invert) {                                                     \
-        pin ## _TIMER->CCER |= EXPANDER(TIM_CCER_CC, pin ## _CHANNEL, P);                \
-      } else {                                                                           \
-      pin ## _TIMER->CCER &= ~(EXPANDER(TIM_CCER_CC, pin ## _CHANNEL, P));               \
-      }                                                                                  \
-      /* invert the signal for negated timers*/                                          \
-      /* also with a XOR for inverted heaters                                         */ \
-      pin ## _TIMER->EGR |= TIM_EGR_UG;                   /* update generation        */ \
-      pin ## _TIMER->CR1 |= TIM_CR1_CEN;                  /* enable counters          */ \
+        freq = 1;   
+
+	  // Timer set-up
+	  htim.Instance = PIN ## _TIMER;
+	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */
+	  htim.Init.CounterMode = TIM_COUNTERMODE_UP;
+	  htim.Init.Period = 0x0000;
+	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	  // HAL_TIM_Base_Init(&htim);
+
+	  HAL_TIM_PWM_Init(&htim);
+
+	  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	  sConfigOC.Pulse = 0;
+	  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	  sConfigOC.OCNPolarity =
+	  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigOC, pin ## _CHANNEL);
+
+	 
+	  HAL_TIM_PWM_Start(&htim);
+
     }                                                                                    \
     else {                                                                               \
       SET_OUTPUT(pin);                                                                   \
