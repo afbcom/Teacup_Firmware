@@ -41,19 +41,24 @@ void serial_init()
 	
 	// AF 4bits per channel
     // Alternate functions from DM00115249.pdf datasheet (page 47; table 9)
-	igpio.Pin = TXD_PIN;
+	#undef GPIO_PIN
+    #define GPIO_PIN(number) (GPIO_PIN_ ## number)
+
+	igpio.Pin = GPIO_PIN(TXD_PIN);
 	igpio.Mode = GPIO_MODE_AF_PP;
 	igpio.Pull = GPIO_PULLUP;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	igpio.Alternate = GPIO_AF7_USART1; //STM32F401 specific
 	HAL_GPIO_Init(TXD_PORT,igpio);
 	
-	igpio.Pin = RXD_PIN;
+	igpio.Pin = GPIO_PIN(RXD_PIN);
 	igpio.Mode = GPIO_MODE_AF_PP;
 	igpio.Pull = GPIO_PULLUP;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
 	HAL_GPIO_Init(RXD_PORT,igpio);
+
+	#undef GPIO_PIN
 	
 	/* Configure the UART */
 
