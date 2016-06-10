@@ -35,6 +35,7 @@
 */
 #define MOTHERBOARD
 
+#define NVIC_PRIORITYGROUP_4         ((uint32_t)0x00000003U)
 
 #define __SYSTEM_CLOCK 96000000UL
 
