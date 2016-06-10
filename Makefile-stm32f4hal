@@ -41,7 +41,8 @@
 ##############################################################################
 
 # MCU ?= lpc1114
-MCU ?= stm32f411
+MCU ?= stm32f401
+# MCU ?= stm32f411
 # MCU ?= atmega328p
 # MCU ?= atmega644
 # MCU ?= atmega1284p
@@ -57,6 +58,18 @@ ifeq ($(MCU), lpc1114)
 else ifeq ($(MCU), stm32f411)
   FLASH_SIZE = 512
   RAM_SIZE = 128
+#need to fix for flash size for each model
+else ifeq ($(MCU), stm32f401)
+  FLASH_SIZE = 512
+  RAM_SIZE = 96
+endif
+
+#Set HAL True for HAL Support
+
+ifeq ($(MCU), stm32f401)
+  HAL := TRUE
+else ifeq ($(MCU), stm32f411)
+  HAL := TRUE
 endif
 
 # CPU clock rate not defined here, but in the CMSIS headers.
@@ -91,7 +104,7 @@ F_CRYSTAL ?= 12000000
 ifeq ($(MCU), lpc1114)
   UPLOADER ?= lpc21isp -control
   UPLOAD_FILE = $(PROGRAM).hex
-else ifeq ($(MCU), stm32f411)
+else ifeq ($(HAL), TRUE)
   UPLOADER ?= st-flash write
   UPLOAD_FILE = $(BUILDDIR)/$(PROGRAM).bin
 endif
@@ -129,7 +142,7 @@ SOURCES = $(wildcard *.c)
 
 ifeq ($(MCU), lpc1114)
   SOURCES += cmsis-system_lpc11xx.c
-else ifeq ($(MCU), stm32f411)
+else ifeq ($(HAL), TRUE)
   SUBDIRS = $(shell find $(HALROOT) -type d)
 #  SOURCES += cmsis-system_stm32f4xx.c
   TEMPLIST := $(addsuffix /*,$(SUBDIRS))
@@ -140,6 +153,8 @@ endif
 # Other target MCU specific adjustments:
 ifeq ($(MCU), lpc1114)
   STARTUP_FILE = cmsis-startup_lpc11xx.s
+else ifeq ($(MCU), stm32f401)
+  STARTUP_FILE = cmsis-startup_stm32f401xe.s
 else ifeq ($(MCU), stm32f411)
   STARTUP_FILE = cmsis-startup_stm32f411xe.s
 endif
@@ -150,7 +165,7 @@ ifeq ($(MCU), lpc1114)
   CFLAGS += -mthumb -mcpu=cortex-m0
   CFLAGS += -mtune=cortex-m0
   CFLAGS += -D__ARM_LPC1114__
-else ifeq ($(MCU), stm32f411)
+else ifeq ($(HAL), TRUE)
   CFLAGS += -mthumb -mcpu=cortex-m4
   CFLAGS += -mfpu=fpv4-sp-d16
   CFLAGS += -mfloat-abi=hard
@@ -177,6 +192,8 @@ ifeq ($(MCU), lpc1114)
   LDFLAGS += -T cmsis-lpc1114.ld
 else ifeq ($(MCU), stm32f411)
   LDFLAGS += -T cmsis-stm32f411xe.ld
+else ifeq ($(MCU), stm32f401)
+  LDFLAGS += -T cmsis-stm32f411xe.ld
 endif
 LDFLAGS += -Wl,--as-needed
 LDFLAGS += -Wl,--gc-sections
@@ -195,8 +212,8 @@ all: $(PROGRAM).hex $(BUILDDIR)/$(PROGRAM).lst $(BUILDDIR)/$(PROGRAM).sym size
 
 stm32f4hal:
 	@$(foreach dir,$(SUBDIRS),mkdir -p $(BUILDDIR)/$(dir))
-	@echo "test-Subdirs"
-	@echo $(SOURCES)
+#	@echo "test-Subdirs"
+#	@echo $(SOURCES)
 
 program: $(UPLOAD_FILE) config.h
 	@echo
