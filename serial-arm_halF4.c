@@ -10,7 +10,7 @@
   Code here is heavily inspired by serial_api.c of MBED
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_HALF4__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__ 
 
 #include "arduino.h"
 #include "delay.h"
@@ -44,19 +44,19 @@ void serial_init()
 	#undef GPIO_PIN
     #define GPIO_PIN(number) (GPIO_PIN_ ## number)
 
-	igpio.Pin = GPIO_PIN(TXD_PIN);
+	igpio.Pin = (GPIO_PIN(2));
 	igpio.Mode = GPIO_MODE_AF_PP;
-	igpio.Pull = GPIO_PULLUP;
-	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	igpio.Alternate = GPIO_AF7_USART1; //STM32F401 specific
-	HAL_GPIO_Init(TXD_PORT,igpio);
-	
-	igpio.Pin = GPIO_PIN(RXD_PIN);
-	igpio.Mode = GPIO_MODE_AF_PP;
-	igpio.Pull = GPIO_PULLUP;
+	igpio.Pull = GPIO_NOPULL;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
-	HAL_GPIO_Init(RXD_PORT,igpio);
+	HAL_GPIO_Init(GPIOA,&igpio);
+	
+	igpio.Pin = (GPIO_PIN(3));
+	igpio.Mode = GPIO_MODE_AF_PP;
+	igpio.Pull = GPIO_NOPULL;
+	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
+	HAL_GPIO_Init(GPIOA,&igpio);
 
 	#undef GPIO_PIN
 	
@@ -79,10 +79,11 @@ void serial_init()
 	// UART_DIV_SAMPLING8(_PCLK_, _BAUD_)   // Does this do what i think??
 	// Or are the other macros that will 
     #else
-        huart.Init.BaudRate = (uint32_t)(48000000/BAUD); // APB1CLK/BAUD
+        huart.Init.BaudRate = (uint32_t)(BAUD); // BAUD is configured
+						// by HAL_UART_Init
     #endif
 	
-	huart.Init.WordLength = UART_WORDLENGTH_8B
+	huart.Init.WordLength = UART_WORDLENGTH_8B;
 	huart.Init.StopBits = UART_STOPBITS_1;
 	huart.Init.Parity = UART_PARITY_NONE;
 	huart.Init.Mode = UART_MODE_TX_RX;
@@ -106,9 +107,8 @@ uint8_t serial_rxchars(void) {
 
 /** Read one character.*/
 uint8_t serial_popchar(void) {
-  uint8_t c = 0;
-  
-  HAL_UART_Receive(&huart, &c, 1 , SERIAL_TIMEOUT);
+  uint8_t c[2] = {0,0};
+  HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
 
   return c;
 }
