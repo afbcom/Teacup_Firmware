@@ -3,7 +3,7 @@
   \brief Manage heaters, including PID and PWM, ARM specific part.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_HALF4__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__
 
 #include "cmsis-stm32f4xx.h"
 #include "pinio.h"
@@ -166,24 +166,24 @@ void heater_init() {
       uint32_t freq;                                                                     \
       uint8_t macro_mask;                                                                \
       if (pin ## _TIMER == TIM1) {                                                       \
-        __HAL_RCC_TIM1_CLK_ENABLE();}                     /* turn on TIM1     */ \
+        __HAL_RCC_TIM1_CLK_ENABLE();}                  		      /* turn on TIM1     */ \
       else if (pin ## _TIMER == TIM2) {                                                  \
-       __HAL_RCC_TIM2_CLK_ENABLE(); }                     /* turn on TIM2     */ \
+       __HAL_RCC_TIM2_CLK_ENABLE(); }                             /* turn on TIM2     */ \
       else if (pin ## _TIMER == TIM3) {                                                  \
-       __HAL_RCC_TIM3_CLK_ENABLE(); }                     /* turn on TIM3     */ \
+       __HAL_RCC_TIM3_CLK_ENABLE(); }                             /* turn on TIM3     */ \
       else if (pin ## _TIMER == TIM4) {                                                  \
-       __HAL_RCC_TIM4_CLK_ENABLE(); }                     /* turn on TIM4     */ \
+       __HAL_RCC_TIM4_CLK_ENABLE(); }                             /* turn on TIM4     */ \
 
 	
   	  
      //Pin set-up
-      igpio.Pin = GPIO_PIN_ ## ( pin ## _PIN);
-	  igpio.Mode = GPIO_MODE_AF_PP;
-	  igpio.Pull = GPIO_PULLUP;
-	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+      igpio.Pin = GPIO_PIN_ ## ( pin ## _PIN);   										\
+	  igpio.Mode = GPIO_MODE_AF_PP; 													\	  
+	  igpio.Pull = GPIO_PULLUP; 														\
+	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 											\
 	   //Not sure if this works but we want GPIO_AFx_TIMx
-	  igpio.Alternate = GPIO_AF ##  ( pin ## _AF ) ## _ ## (pin ## _TIMER);
-	  HAL_GPIO_Init( pin ## _PORT , &igpio); 
+	  igpio.Alternate = GPIO_AF ##  ( pin ## _AF ) ## _ ## (pin ## _TIMER);				\
+	  HAL_GPIO_Init( pin ## _PORT , &igpio); 											\
 
       freq = F_CPU / PWM_SCALE / (pwm ? pwm : 1);                 /* Figure PWM freq. */ \
       if (freq > 65535)                                                                  \
@@ -192,24 +192,23 @@ void heater_init() {
         freq = 1;   
 
 	  // Timer set-up
-	  htim.Instance = PIN ## _TIMER;
-	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */
-	  htim.Init.CounterMode = TIM_COUNTERMODE_UP;
-	  htim.Init.Period = 0x0000;
-	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	  htim.Instance = PIN ## _TIMER;													\								
+	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */										\
+	  htim.Init.CounterMode = TIM_COUNTERMODE_UP;										\
+	  htim.Init.Period = 0x0000;														\
+	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;									\
 	  // HAL_TIM_Base_Init(&htim);
 
-	  HAL_TIM_PWM_Init(&htim);
+	  HAL_TIM_PWM_Init(&htim);															\
 
-	  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-	  sConfigOC.Pulse = 0;
-	  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	  sConfigOC.OCNPolarity =
-	  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigOC, pin ## _CHANNEL);
+	  sConfigOC.OCMode = TIM_OCMODE_PWM1;												\
+	  sConfigOC.Pulse = 0;																\
+	  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;										\
+	  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;										\
+	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigOC, pin ## _CHANNEL);					\
 
 	 
-	  HAL_TIM_PWM_Start(&htim);
+	  HAL_TIM_PWM_Start(&htim);															\
 
     }                                                                                    \
     else {                                                                               \
