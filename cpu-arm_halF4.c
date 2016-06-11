@@ -5,7 +5,7 @@
   To be included from cpu.c, for details see there.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_HALF4__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__
   
 #include "config_wrapper.h"
 #include "stm32f4xx_hal_conf.h"    
