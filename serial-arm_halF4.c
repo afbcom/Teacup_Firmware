@@ -67,7 +67,19 @@ void serial_init()
     #define BAUD 115200
     #endif
 
+
         huart.Init.BaudRate = 115200;
+
+ //    #if (BAUD == 115200)
+ //        huart.Init.BaudRate = (uint32_t)(0x01A1);
+	// // UART_DIV_SAMPLING8(_PCLK_, _BAUD_)   // Does this do what i think??
+	// // Or are the other macros that will 
+ //    #else
+ //        huart.Init.BaudRate = (uint32_t)(BAUD); // BAUD is configured
+	// 					// by HAL_UART_Init
+ //    #endif
+	
+	huart.Init.BaudRate = (uint32_t)(BAUD);
 	huart.Init.WordLength = UART_WORDLENGTH_8B;
 	huart.Init.StopBits = UART_STOPBITS_1;
 	huart.Init.Parity = UART_PARITY_NONE;
