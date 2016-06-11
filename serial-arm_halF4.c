@@ -31,7 +31,7 @@ UART_HandleTypeDef huart;
 void serial_init()
 {
 	
-
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 	GPIO_InitTypeDef  igpio;
 	
 		// Enable TX/RX clock (GPIOA)
@@ -42,24 +42,17 @@ void serial_init()
 	
 	// AF 4bits per channel
     // Alternate functions from DM00115249.pdf datasheet (page 47; table 9)
-	#undef GPIO_PIN
-    #define GPIO_PIN(number) (GPIO_PIN_ ## number)
+//	#undef GPIO_PIN
+  //  #define GPIO_PIN(number) (GPIO_PIN_ ## number)
 
-	igpio.Pin = (GPIO_PIN(2));
+	igpio.Pin = GPIO_PIN_2|GPIO_PIN_3;
 	igpio.Mode = GPIO_MODE_AF_PP;
 	igpio.Pull = GPIO_NOPULL;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
-	HAL_GPIO_Init(GPIOA,&igpio);
-	
-	igpio.Pin = (GPIO_PIN(3));
-	igpio.Mode = GPIO_MODE_AF_PP;
-	igpio.Pull = GPIO_NOPULL;
-	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
-	HAL_GPIO_Init(GPIOA,&igpio);
+	HAL_GPIO_Init(GPIOA, &igpio);
 
-	#undef GPIO_PIN
+//	#undef GPIO_PIN
 	
 	/* Configure the UART */
 
