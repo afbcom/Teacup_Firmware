@@ -31,7 +31,7 @@ UART_HandleTypeDef huart;
 void serial_init()
 {
 	
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+//	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 	GPIO_InitTypeDef  igpio;
 	
 		// Enable TX/RX clock (GPIOA)
@@ -47,7 +47,7 @@ void serial_init()
 
 	igpio.Pin = GPIO_PIN_2|GPIO_PIN_3;
 	igpio.Mode = GPIO_MODE_AF_PP;
-	igpio.Pull = GPIO_NOPULL;
+	igpio.Pull = GPIO_PULLUP;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
 	HAL_GPIO_Init(GPIOA, &igpio);
@@ -123,7 +123,7 @@ uint8_t serial_txchars(void) {
 
 //TODO Change or rethink delays
 void serial_writechar(uint8_t data) {
-	
+
     delay_us((1000000 / BAUD * 10) + 7);
 	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
 }
