@@ -93,39 +93,67 @@ void serial_init()
   Other than the AVR implementation this returns not the number of characters
   in the line, but only wether there is at least one or not.
   
-  ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
-*/
-uint8_t serial_rxchars(void) {  
-  return huart.RxXferCount;
+//   ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
+// */
+// uint8_t serial_rxchars(void) {  
+//   return huart.RxXferCount;
+// }
+
+// /** Read one character.*/
+// uint8_t serial_popchar(void) {
+//   uint8_t c[2] = {0,0};
+//   HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
+
+//   return c;
+// }
+
+// /** Check wether characters can be written
+//   ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
+// */
+// uint8_t serial_txchars(void) {
+//   return huart.TxXferCount;
+// }
+
+// //Old Code
+// // void serial_writechar(uint8_t data) {
+//   // if ( !serial_txchars())       // Queue full?
+//     // delay_us((1000000 / BAUD * 10) + 7);
+//   // USART2->DR = (uint32_t)(data & 0x1FF);
+// // }
+
+// //TODO Change or rethink delays
+// void serial_writechar(uint8_t data) {
+	
+//     delay_us((1000000 / BAUD * 10) + 7);
+// 	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
+// }
+
+ uint8_t serial_rxchars(void) {
+  return USART2->SR & USART_SR_RXNE;
 }
 
-/** Read one character.*/
+/** Read one character.
+*/
 uint8_t serial_popchar(void) {
-  uint8_t c[2] = {0,0};
-  HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
+  uint8_t c = 0;
+
+  if (serial_rxchars())
+    c = (uint8_t)(USART2->DR & 0x1FF);
 
   return c;
 }
 
 /** Check wether characters can be written
-  ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
 */
 uint8_t serial_txchars(void) {
-  return huart.TxXferCount;
+  return USART2->SR &USART_SR_TXE;
 }
-
-//Old Code
-// void serial_writechar(uint8_t data) {
-  // if ( !serial_txchars())       // Queue full?
-    // delay_us((1000000 / BAUD * 10) + 7);
-  // USART2->DR = (uint32_t)(data & 0x1FF);
-// }
-
-//TODO Change or rethink delays
+/** Send one character.
+*/
 void serial_writechar(uint8_t data) {
-	
+  if ( !serial_txchars())       // Queue full?
     delay_us((1000000 / BAUD * 10) + 7);
-	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
+  USART2->DR = (uint32_t)(data & 0x1FF);
 }
 
 
