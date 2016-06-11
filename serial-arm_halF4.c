@@ -66,19 +66,7 @@ void serial_init()
     #if !defined BAUD
     #define BAUD 115200
     #endif
-
-
-        huart.Init.BaudRate = 115200;
-
- //    #if (BAUD == 115200)
- //        huart.Init.BaudRate = (uint32_t)(0x01A1);
-	// // UART_DIV_SAMPLING8(_PCLK_, _BAUD_)   // Does this do what i think??
-	// // Or are the other macros that will 
- //    #else
- //        huart.Init.BaudRate = (uint32_t)(BAUD); // BAUD is configured
-	// 					// by HAL_UART_Init
- //    #endif
-	
+    
 	huart.Init.BaudRate = (uint32_t)(BAUD);
 	huart.Init.WordLength = UART_WORDLENGTH_8B;
 	huart.Init.StopBits = UART_STOPBITS_1;
@@ -155,7 +143,6 @@ uint8_t serial_txchars(void) {
 */
 void serial_writechar(uint8_t data)  {
   if ( !serial_txchars())       // Queue full?
-
     delay_us((1000000 / BAUD * 10) + 7);
   USART2->DR = (uint32_t)(data & 0x1FF);
 }

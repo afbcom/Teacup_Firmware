@@ -75,8 +75,8 @@ void init_analog() {
   hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
   hadc.Init.Resolution = ADC_RESOLUTION_10B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc.Init.ScanConvMode = DISABLE;
-  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  hadc.Init.ScanConvMode = DISABLE; 
+  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV; // Not sure
   hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.NbrOfConversion = NUM_TEMP_SENSORS;
   hadc.Init.DiscontinuousConvMode = DISABLE;
@@ -133,7 +133,7 @@ void init_dma() {
                                  NUM_TEMP_SENSORS * OVERSAMPLE );
 
 
-  NVIC_SetPriority(DMA2_Stream4_IRQn,
+  NVIC_SetPriority( hdma.Instance ## _IRQn,
   NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 3, 1));
 
 }
@@ -177,7 +177,7 @@ uint16_t analog_read(uint8_t index) {
     // ATOMIC_END
 
     for (i = 0; i < OVERSAMPLE; i++) {
-      temp = adc_buffer[!(DMA2_Stream4->CR & DMA_SxCR_CT)][index + NUM_TEMP_SENSORS * i];
+      temp = adc_buffer[ DMA_SxCR_CT ][index + NUM_TEMP_SENSORS * i];
       max_temp = max_temp > temp ? max_temp : temp;
       min_temp = min_temp < temp ? min_temp : temp;
       r += temp;
