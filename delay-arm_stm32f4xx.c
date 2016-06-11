@@ -28,8 +28,9 @@
            appear, there's more math neccessary, see the AVR version. Or simply
            a second implementation.
 */
-void delay_us(uint16_t delay) {
 
+void delay_us(uint16_t delay) {
+  //#if __SYSTEM_CLOCK == 96000000UL
     __ASM (".balign 16");  // No gambling with the prefetch engine.
     while (delay) {
       __ASM volatile (
@@ -45,6 +46,23 @@ void delay_us(uint16_t delay) {
       );
       delay--;
     }
+  /*#elif __SYSTEM_CLOCK == 84000000UL
+  // http://www.carminenoviello.com/2015/09/04/precisely-measure-microseconds-stm32/
+   do {
+        __ASM volatile (
+           "  mov r0,%[loops]\n\t"
+           "1:               \n\t"
+           "  sub r0, #1     \n\t"
+           "  cmp r0, #0     \n\t"
+           "  bne 1b         \n\t"
+           :
+           : [loops] "r" (16*delay)
+           : "memory"
+        );
+   } while(0)
+  #else
+    #error No delay_us() implementation for this CPU clock frequency.
+  #endif*/
 }
 
 #endif /* defined TEACUP_C_INCLUDE && defined __ARMEL__ */
