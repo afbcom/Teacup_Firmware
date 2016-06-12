@@ -23,7 +23,7 @@
          See serial-avr.c for inspiration.
 #endif
 
-#define SERIAL_TIMEOUT (0xFFFF)
+#define SERIAL_TIMEOUT (0xFFFFFFFF)
 
 UART_HandleTypeDef huart;
 
@@ -43,11 +43,18 @@ void serial_init()
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
 	HAL_GPIO_Init(GPIOA, &igpio);
 
+<<<<<<< HEAD
+	/* Configure the UART */
+  #if !defined BAUD
+  #define BAUD 115200
+  #endif
+=======
 
 
     #if !defined BAUD
     #define BAUD 115200
     #endif
+>>>>>>> 88d887abbbe1477d82f113fe2d429e7f3d1ccaec
     
 //  huart.Instance = USART2;
 
@@ -68,16 +75,29 @@ void serial_init()
 }
 
 
+<<<<<<< HEAD
+  Other than the AVR implementation this returns not the number of characters
+  in the line, but only wether there is at least one or not.
+*/
+uint8_t serial_rxchars(void) {  
+   return __HAL_UART_GET_FLAG(&huart,UART_FLAG_RXNE);
+=======
 
 uint8_t serial_rxchars(void) {
   return USART2->SR & USART_SR_RXNE;
+>>>>>>> 88d887abbbe1477d82f113fe2d429e7f3d1ccaec
 }
 
  /** Read one character.*/
 
 uint8_t serial_popchar(void) {
+<<<<<<< HEAD
+  uint8_t c = 0;
+  HAL_UART_Receive(&huart, &c, 1 , SERIAL_TIMEOUT);
+=======
    uint8_t c = 0;
    HAL_UART_Receive(&huart, &c, 1 , SERIAL_TIMEOUT);
+>>>>>>> 88d887abbbe1477d82f113fe2d429e7f3d1ccaec
 
    return c;
 }
@@ -94,10 +114,14 @@ uint8_t serial_popchar(void) {
 */
 
 void serial_writechar(uint8_t data) {
+<<<<<<< HEAD
+  HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
+=======
   if ( !serial_txchars())       // Queue full?
 
     delay_us((1000000 / BAUD * 10) + 7);
 	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
+>>>>>>> 88d887abbbe1477d82f113fe2d429e7f3d1ccaec
 }
 
 
