@@ -15,7 +15,6 @@
 
 #include "arduino.h"
 #include "delay.h"
-#include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_conf.h"
 
 
@@ -45,7 +44,7 @@ void serial_init()
 //	#undef GPIO_PIN
   //  #define GPIO_PIN(number) (GPIO_PIN_ ## number)
 
-	igpio.Pin = GPIO_PIN_2|GPIO_PIN_3;
+	igpio.Pin = GPIO_PIN_2 | GPIO_PIN_3;
 	igpio.Mode = GPIO_MODE_AF_PP;
 	igpio.Pull = GPIO_NOPULL;
 	igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -67,6 +66,7 @@ void serial_init()
     #define BAUD 115200
     #endif
     
+  huart.Instance = USART2;
 	huart.Init.BaudRate = (uint32_t)(BAUD);
 	huart.Init.WordLength = UART_WORDLENGTH_8B;
 	huart.Init.StopBits = UART_STOPBITS_1;
@@ -83,69 +83,35 @@ void serial_init()
 
   Other than the AVR implementation this returns not the number of characters
   in the line, but only wether there is at least one or not.
-  
-//   ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
-// */
-// uint8_t serial_rxchars(void) {  
-//   return huart.RxXferCount;
-// }
-
-// /** Read one character.*/
-// uint8_t serial_popchar(void) {
-//   uint8_t c[2] = {0,0};
-//   HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
-
-//   return c;
-// }
-
-// /** Check wether characters can be written
-//   ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
-// */
-// uint8_t serial_txchars(void) {
-//   return huart.TxXferCount;
-// }
-
-// //Old Code
-// // void serial_writechar(uint8_t data) {
-//   // if ( !serial_txchars())       // Queue full?
-//     // delay_us((1000000 / BAUD * 10) + 7);
-//   // USART2->DR = (uint32_t)(data & 0x1FF);
-// // }
-
-// //TODO Change or rethink delays
-// void serial_writechar(uint8_t data) {
-	
-//     delay_us((1000000 / BAUD * 10) + 7);
-// 	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
-// }
-
- uint8_t serial_rxchars(void) {
-  return USART2->SR & USART_SR_RXNE;
+*/
+uint8_t serial_rxchars(void) {  
+  return huart.RxXferCount;
 }
 
-/** Read one character.
-*/
+// /** Read one character.*/
 uint8_t serial_popchar(void) {
-  uint8_t c = 0;
-
-  if (serial_rxchars())
-    c = (uint8_t)(USART2->DR & 0x1FF);
+  uint8_t c[2] = {0,0};
+  HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
 
   return c;
 }
 
 /** Check wether characters can be written
+  ***STM-NUCLEO-PORT: THIS IS NOT NEEDED ***
 */
 uint8_t serial_txchars(void) {
-  return USART2->SR &USART_SR_TXE;
+  return huart.TxXferCount;
 }
-/** Send one character.
-*/
-void serial_writechar(uint8_t data)  {
-  if ( !serial_txchars())       // Queue full?
+
+
+// //TODO Change or rethink delays
+void serial_writechar(uint8_t data) {
+	
     delay_us((1000000 / BAUD * 10) + 7);
-  USART2->DR = (uint32_t)(data & 0x1FF);
+	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
 }
+
+
 
 
 #endif /* defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__ */
