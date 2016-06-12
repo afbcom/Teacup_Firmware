@@ -23,7 +23,7 @@
          See serial-avr.c for inspiration.
 #endif
 
-#define SERIAL_TIMEOUT (0xFFFF)
+#define SERIAL_TIMEOUT (0xFFFFFFFF)
 
 UART_HandleTypeDef huart;
 	
@@ -51,20 +51,10 @@ void serial_init()
 	igpio.Alternate = GPIO_AF7_USART2; //STM32F401 specific
 	HAL_GPIO_Init(GPIOA, &igpio);
 
-//	#undef GPIO_PIN
-	
 	/* Configure the UART */
-
-    /* 19.3.4 Fractional baud rate generation => reference manual for STM32F411
-    Set BRR for 115,200 Hz 
-    div = 48MHz/(16*BAUD)
-    Mantisse = int(div) << 8
-    Divisor = int((div - int(div))*16)
-    BRR = Mantisse + Divisor
-    */
-    #if !defined BAUD
-    #define BAUD 115200
-    #endif
+  #if !defined BAUD
+  #define BAUD 115200
+  #endif
     
   huart.Instance = USART2;
 	huart.Init.BaudRate = (uint32_t)(BAUD);
@@ -85,13 +75,13 @@ void serial_init()
   in the line, but only wether there is at least one or not.
 */
 uint8_t serial_rxchars(void) {  
-  return huart.RxXferCount;
+   return __HAL_UART_GET_FLAG(&huart,UART_FLAG_RXNE);
 }
 
 // /** Read one character.*/
 uint8_t serial_popchar(void) {
-  uint8_t c[2] = {0,0};
-  HAL_UART_Receive(&huart, c, 1 , SERIAL_TIMEOUT);
+  uint8_t c = 0;
+  HAL_UART_Receive(&huart, &c, 1 , SERIAL_TIMEOUT);
 
   return c;
 }
@@ -106,9 +96,7 @@ uint8_t serial_txchars(void) {
 
 // //TODO Change or rethink delays
 void serial_writechar(uint8_t data) {
-	
-    delay_us((1000000 / BAUD * 10) + 7);
-	HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
+  HAL_UART_Transmit(&huart, &data, 1, SERIAL_TIMEOUT);
 }
 
 
