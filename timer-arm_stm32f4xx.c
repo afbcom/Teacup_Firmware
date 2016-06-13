@@ -5,7 +5,7 @@
   To be included from timer.c.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__ && 0
 
 #include "core_cm4.h"
 #include "clock.h"

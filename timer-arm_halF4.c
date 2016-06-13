@@ -7,10 +7,13 @@
 
 #if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__
 
-#include "cmsis-core_cm4.h"
+// #include "cmsis-core_cm4.h"
+#include "core_cm4.h"
 #include "clock.h"
 #include "pinio.h"
 #include "dda_queue.h"
+#include "stm32f4xx_hal_conf.h"  
+
 
 /** Timer initialisation.
 
@@ -28,11 +31,12 @@
   already running, ignored.
 */
 
+
 TIM_HandleTypeDef htim;
 
 
 void timer_init() {
-	
+  __HAL_RCC_TIM5_CLK_ENABLE();  
 /**
   Initialise the system tick timer
 
@@ -41,49 +45,18 @@ void timer_init() {
 
 */
 
-  HAL_NVIC_SetPriorityGrouping(1);
-  HAL_SYSTICK_Config(TICK_TIME);;
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_0);
+  HAL_SYSTICK_Config(TICK_TIME);
+  HAL_NVIC_SetPriority(PendSV_IRQn, 2, 0);
 
-
-
-  /**
-    Initialise PendSV for dda_clock().
-  */
-  HAL_NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(HAL_NVIC_GetPriorityGrouping(), 2, 0)) // Almost highest priority.
-
-  /**
-    Initialise the stepper timer. On ARM we have the comfort of hardware
-    32-bit timers, so we don't have to artifically extend the timer to this
-    size. We use match register 1 of the first 32-bit timer, TIM5.
-
-    We run the timer all the time, just turn the interrupt on and off, to
-    allow interrupts equally spaced, independent from processing time. See
-    also description of timer_set().
-  */
-  
-//TODO? Make  this generalizable so that any timer can be used?
-  __HAL_RCC_TIM5_CLK_ENABLE();
- 
-
-#ifndef STEPPER_TIMER
-	#define STEPPER_TIMER TIM5
-#endif
-
-#define STEPPER_TIMER_IRQN TIM5_IRQn
-
-  htim.Instance = STEPPER_TIMER;
-  
-  htim.Init.Prescaler = TIM_ETRPRESCALER_DIV1;
-  htim.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim.Init.Period = 0x0000;
-  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim.Init.RepetitionCounter = 0;
-  HAL_TIM_Base_Init(&htim);
+  //Init with default values
+  htim.Instance = TIM5;
   HAL_TIM_Base_Start(&htim);
 
-  HAL_NVIC_SetPriority(STEPPER_TIMER_IRQN,
-  NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));           // Also highest priority.
-  HAL_NVIC_EnableIRQ(STEPPER_TIMER_IRQN);                // Enable interrupt generally.
+  HAL_NVIC_SetPriority(TIM5_IRQn, 0, 0);           // Also highest priority.
+  HAL_NVIC_EnableIRQ(TIM5_IRQn);     
+
+
 }
 
 /** System clock interrupt.
@@ -95,6 +68,7 @@ void SysTick_Handler(void) {
 
   clock_tick();
 
+  //No HAL Function
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;             // Trigger PendSV_Handler().
 
 }
@@ -120,6 +94,7 @@ void TIM5_IRQHandler(void) {
 
   #ifdef DEBUG_LED_PIN
     WRITE(DEBUG_LED_PIN, 1);
+ 
   #endif
 
   /**
@@ -128,16 +103,16 @@ void TIM5_IRQHandler(void) {
   */
  
 // TIM5->DIER = 0;
-  __HAL_TIM_DISABLE_IT(&htim, TIM_IT_UPDATE | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4
-					   | TIM_IT_COM | TIM_IT_TRIGGER | TIM_IT_BREAK);
+  __HAL_TIM_DISABLE_IT( &htim, TIM_IT_UPDATE | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | 
+                        TIM_IT_CC4 | TIM_IT_COM | TIM_IT_TRIGGER | TIM_IT_BREAK);
  
  /**
     We have to "reset" this interrupt, else it'll be triggered over and over
     again.
   */
   //TIM5->SR = 0;
-  __HAL_TIM_CLEAR_FLAG(&htim,TIM_FLAG_UPDATE | TIM_FLAG_CC1 | TIM_FLAG_CC2 | TIM_FLAG_CC3 | TIM_FLAG_CC4 | 
-					   | TIM_FLAG_COM | TIM_FLAG_TRIGGER | TIM_FLAG_BREAK );
+  __HAL_TIM_CLEAR_FLAG( &htim, TIM_FLAG_UPDATE | TIM_FLAG_CC1 | TIM_FLAG_CC2 | TIM_FLAG_CC3 | 
+                        TIM_FLAG_CC4 | TIM_FLAG_COM | TIM_FLAG_TRIGGER | TIM_FLAG_BREAK );
 
   queue_step();
 
@@ -194,13 +169,13 @@ uint8_t timer_set(int32_t delay, uint8_t check_short) {
         TIM5->CNT         = timer counter = current time.
         TIM5->CCR1        = last capture compare = time of the last step.
       */
-	  
+    
       // if ((TIM5->CNT - TIM5->CCR1) + 100 > delay)
         // return 1;
-	
-	  if( __HAL_TIM_GET_COUNTER(&htim) - __HAL_TIM_GET_COMPARE(&htim, TIM_CHANNEL_1) + 100 > delay) 
-		  return 1;
-	  
+  
+    if( __HAL_TIM_GET_COUNTER(&htim) - __HAL_TIM_GET_COMPARE(&htim, TIM_CHANNEL_1) + 100 > delay) 
+      return 1;
+    
     }
   #endif /* ACCELERATION_TEMPORAL */
 
@@ -210,7 +185,7 @@ uint8_t timer_set(int32_t delay, uint8_t check_short) {
     by calling timer_reset() shortly before we arrive here.
   */
   // TIM5->CCR1 += delay;
-  __HAL_TIM_SET_COMPARE(&htim, TIM_CHANNEL_1, __HAL_TIM_GET_COMPARE(&htim, TIM_CHANNEL_) + delay);
+  __HAL_TIM_SET_COMPARE(&htim, TIM_CHANNEL_1, __HAL_TIM_GET_COMPARE(&htim, TIM_CHANNEL_1) + delay);
 
   /**
     Turn on the stepper interrupt. As this interrupt is the only use of this
@@ -232,7 +207,7 @@ uint8_t timer_set(int32_t delay, uint8_t check_short) {
   2^32 / F_CPU = 22 to 44 seconds.
 */
 void timer_reset() {
-  // TIM5->CNT = 0;	
+  // TIM5->CNT = 0; 
   __HAL_TIM_SET_COUNTER(&htim, 0);
   // TIM5->CCR1 = 0;
   __HAL_TIM_SET_COMPARE(&htim,TIM_CHANNEL_1, 0);
