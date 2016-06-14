@@ -5,7 +5,7 @@
   each channel. We are using DMA instead.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__ && 0
 
 #include "stm32f4xx.h"
 #include "arduino.h"

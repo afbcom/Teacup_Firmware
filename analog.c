@@ -42,6 +42,7 @@ static uint8_t adc_channel[NUM_TEMP_SENSORS] = {
 #include "analog-avr.c"
 #include "analog-arm_lpc11xx.c"
 #include "analog-arm_stm32f4xx.c"
+#include "analog-arm_halF4.c"
 #undef TEACUP_C_INCLUDE
 
 // No common code so far.
