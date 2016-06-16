@@ -60,7 +60,7 @@ void delay_us(uint16_t delay) {
            : [loops] "r" (16*delay)
            : "memory"
         );
-   } while(0)
+   } while(0);
   #else
     #error No delay_us() implementation for this CPU clock frequency.
   #endif
