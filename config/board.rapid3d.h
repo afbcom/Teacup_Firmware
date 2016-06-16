@@ -35,8 +35,8 @@
 */
 #define MOTHERBOARD
 
-#define __SYSTEM_CLOCK 84000000UL
-
+//#define __SYSTEM_CLOCK 84000000UL
+#define __SYSTEM_CLOCK 96000000UL
 /***************************************************************************\
 *                                                                           *
 * 2. PINOUTS                                                                *
@@ -46,13 +46,13 @@
 //#define TX_ENABLE_PIN            xxxx
 //#define RX_ENABLE_PIN            xxxx
 
-#define X_STEP_PIN               PC_14
-#define X_DIR_PIN                PC_13
+#define X_STEP_PIN               PC_13
+#define X_DIR_PIN                PC_14
 #define X_MIN_PIN                PB_4
 #define X_MAX_PIN                PB_14
 #define X_ENABLE_PIN             PB_7
 //#define X_INVERT_DIR
-#define X_INVERT_MIN
+//#define X_INVERT_MIN
 //#define X_INVERT_MAX
 //#define X_INVERT_ENABLE
 
@@ -60,7 +60,7 @@
 #define Y_DIR_PIN                PA_1
 #define Y_MIN_PIN                PB_5
 #define Y_MAX_PIN                PB_13
-#define Y_ENABLE_PIN             PC_14
+#define Y_ENABLE_PIN             PC_15
 //#define Y_INVERT_DIR
 #define Y_INVERT_MIN
 //#define Y_INVERT_MAX
