@@ -69,60 +69,61 @@ void init_analog() {
     igpio.Mode = GPIO_MODE_ANALOG;                          \
     igpio.Pull = GPIO_NOPULL;                               \
     igpio.Speed = GPIO_SPEED_FREQ_HIGH;                     \
-    HAL_GPIO_Init( pin ## _PORT , &igpio);                           
+    HAL_GPIO_Init( pin ## _PORT , &igpio);                  \
+    hadc.Instance = ADC1;                                   \
+    hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;    \
+    hadc.Init.ScanConvMode = ENABLE;                        \
+    hadc.Init.Resolution = ADC_RESOLUTION_10B;              \
+    hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;              \
+    hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;        \
+    hadc.Init.ContinuousConvMode = ENABLE;                  \
+    hadc.Init.DiscontinuousConvMode = DISABLE;              \
+    hadc.Init.NbrOfConversion = NUM_TEMP_SENSORS;           \
+    hadc.Init.DMAContinuousRequests = ENABLE;               \
+    hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;              \
+    hadc.DMA_Handle = &hdma;                                \
+    HAL_ADC_Init( &hadc );                                  \
+    sConfig.Channel = 1;                          \
+    sConfig.Rank = 1 ;                   \
+    sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;         \
+    HAL_ADC_ConfigChannel( &hadc, &sConfig );                            
   #include "config_wrapper.h"               
   #undef DEFINE_TEMP_SENSOR
 
-  hadc.Instance = ADC1;
-  hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
-  hadc.Init.ScanConvMode = ENABLE; 
-  hadc.Init.Resolution = ADC_RESOLUTION_10B;  
-  hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc.Init.ContinuousConvMode = ENABLE;
-  hadc.Init.DiscontinuousConvMode = DISABLE;
-  hadc.Init.NbrOfConversion = NUM_TEMP_SENSORS;
-  hadc.Init.DMAContinuousRequests = ENABLE;
-  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;  
-  hadc.DMA_Handle = &hdma; 
-  
-  HAL_ADC_Init( &hadc );
- 
+
 
   // for loop over each channel (0..15) for sequence
-  // #undef DEFINE_TEMP_SENSOR
-  // for PIO ## ADC >= 10 SRPR1 and ADC -10, else SMPR 2
-  // 0x03 = 28 cycles
+  // // for PIO ## ADC >= 10 SRPR1 and ADC -10, else SMPR 2
+  // // 0x03 = 28 cycles
   // #define DEFINE_TEMP_SENSOR(name, type, pin, additional) \
-  //   if (NUM_TEMP_SENSORS) {                               \
-  //      sConfig.Channel = pin ## _ADC;                     \
-  //      sConfig.Rank = TEMP_SENSOR_ ## name ;              \
-  //      sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;    \
-  //      HAL_ADC_ConfigChannel( &hadc, &sConfig );          \
-  //   }                                                     
+                                              
   // #include "config_wrapper.h"
   // #undef DEFINE_TEMP_SENSOR
 
-  #define DEFINE_TEMP_SENSOR(name, type, pin, additional) \
-  if (NUM_TEMP_SENSORS) { \
-    uint8_t subt = (pin ## _ADC > 9) ? 10 : 0; \
-    if (pin ## _ADC > 9) { \
-      ADC1->SMPR1 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
-    } else { \
-      ADC1->SMPR2 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
-    } \
-    subt = (TEMP_SENSOR_ ## name < 7) ? 0 : (TEMP_SENSOR_ ## name < 13) ? 7 : 13; \
-    if (TEMP_SENSOR_ ## name < 7) { \
-      ADC1->SQR3 |= pin ## _ADC << (5 * TEMP_SENSOR_ ## name - subt); \
-    } else \
-    if (TEMP_SENSOR_ ## name < 13) { \
-      ADC1->SQR2 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
-    } else { \
-      ADC1->SQR1 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
-    } \
-  }
-  #include "config_wrapper.h"
-  #undef DEFINE_TEMP_SENSOR
+
+
+ 
+
+  // #define DEFINE_TEMP_SENSOR(name, type, pin, additional) \
+  // if (NUM_TEMP_SENSORS) { \
+  //   uint8_t subt = (pin ## _ADC > 9) ? 10 : 0; \
+  //   if (pin ## _ADC > 9) { \
+  //     ADC1->SMPR1 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
+  //   } else { \
+  //     ADC1->SMPR2 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
+  //   } \
+  //   subt = (TEMP_SENSOR_ ## name < 7) ? 0 : (TEMP_SENSOR_ ## name < 13) ? 7 : 13; \
+  //   if (TEMP_SENSOR_ ## name < 7) { \
+  //     ADC1->SQR3 |= pin ## _ADC << (5 * TEMP_SENSOR_ ## name - subt); \
+  //   } else \
+  //   if (TEMP_SENSOR_ ## name < 13) { \
+  //     ADC1->SQR2 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
+  //   } else { \
+  //     ADC1->SQR1 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
+  //   } \
+  // }
+  // #include "config_wrapper.h"
+  // #undef DEFINE_TEMP_SENSOR
 
 
   /*

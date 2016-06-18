@@ -179,10 +179,10 @@ void heater_init() {
       else if (pin ## _TIMER == TIM4) {                              \
        __HAL_RCC_TIM4_CLK_ENABLE();           /* turn on TIM4     */ \
        igpio.Alternate = GPIO_AF2_TIM4;}							 \
-      /* Pin set-up */												 \
-      igpio.Pin = 0x01 << pin ## _PIN;                               \
-	  igpio.Mode = GPIO_MODE_AF_PP; 								 \
-	  igpio.Pull = GPIO_PULLUP; 									 \
+      /* Pin set-up */												 	\
+      igpio.Pin = 0x01 << pin ## _PIN;                               	\
+	  igpio.Mode = GPIO_MODE_AF_PP; 								 	\
+	  igpio.Pull = GPIO_PULLUP; 									 	\
 	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 							\
 	  HAL_GPIO_Init( pin ## _PORT , &igpio); 							\
       freq = F_CPU / PWM_SCALE / (pwm ? pwm : 1); /* Figure PWM freq. */\
