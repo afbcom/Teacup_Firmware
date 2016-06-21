@@ -157,50 +157,49 @@ void heater_init() {
 
   GPIO_InitTypeDef  igpio;
   TIM_HandleTypeDef htim;
-  // TIM_OC_InitTypeDef sConfigOC;
+  TIM_OC_InitTypeDef sConfigIC;
 
   // Auto-generate pin setup.
   #undef DEFINE_HEATER 
-  #define DEFINE_HEATER(name, pin, invert, pwm) 					 \
-    TIM_OC_InitTypeDef sConfigOC;									 \
+  #define DEFINE_HEATER(name, pin, invert, pwm) 					           \
     if (pwm && pin ## _TIMER) {                                      \
       uint32_t freq;                                                 \
       uint8_t macro_mask;                                            \
       if (pin ## _TIMER == TIM1) {                                   \
-        __HAL_RCC_TIM1_CLK_ENABLE();								 \
+        __HAL_RCC_TIM1_CLK_ENABLE();								                 \
         igpio.Alternate = GPIO_AF1_TIM1;}   /* turn on TIM1     */   \
       else if (pin ## _TIMER == TIM2){                               \
-       __HAL_RCC_TIM2_CLK_ENABLE();									 \
-       igpio.Alternate = GPIO_AF1_TIM2;								 \
-        }         /* turn on TIM2     */   							 \
+       __HAL_RCC_TIM2_CLK_ENABLE();									                 \
+       igpio.Alternate = GPIO_AF1_TIM2;								               \
+        }         /* turn on TIM2     */   							             \
       else if (pin ## _TIMER == TIM3) {                              \
-       __HAL_RCC_TIM3_CLK_ENABLE();									 \
+       __HAL_RCC_TIM3_CLK_ENABLE();									                 \
        igpio.Alternate = GPIO_AF2_TIM3;}  /* turn on TIM3     */     \
       else if (pin ## _TIMER == TIM4) {                              \
        __HAL_RCC_TIM4_CLK_ENABLE();           /* turn on TIM4     */ \
-       igpio.Alternate = GPIO_AF2_TIM4;}							 \
-      /* Pin set-up */												 	\
-      igpio.Pin = 0x01 << pin ## _PIN;                               	\
-	  igpio.Mode = GPIO_MODE_AF_PP; 								 	\
-	  igpio.Pull = GPIO_PULLUP; 									 	\
-	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 							\
-	  HAL_GPIO_Init( pin ## _PORT , &igpio); 							\
+       igpio.Alternate = GPIO_AF2_TIM4;}							               \
+      /* Pin set-up */												                     	 \
+      igpio.Pin = 0x01 << pin ## _PIN;                               \
+	  igpio.Mode = GPIO_MODE_AF_PP; 								 	                 \
+	  igpio.Pull = GPIO_PULLUP; 									 	                   \
+	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 							           \
+	  HAL_GPIO_Init( pin ## _PORT , &igpio); 							             \
       freq = F_CPU / PWM_SCALE / (pwm ? pwm : 1); /* Figure PWM freq. */\
 	  	if (freq > 65535) freq = 65535;                                 \
 	    if (freq < 1) freq = 1;   /*  Timer Base config */              \
-	  htim.Instance = pin ## _TIMER;									\
-	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */						\
-	  htim.Init.CounterMode = TIM_COUNTERMODE_UP;						\
-	  htim.Init.Period = 0x0000;										\
-	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;					\
-	  HAL_TIM_PWM_Init(&htim);											\
-    /* Output Control Config*/                                          \
-	  sConfigOC.OCMode = TIM_OCMODE_PWM1;								\
-	  sConfigOC.Pulse = 0;												\
-	  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;						\
-	  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;						\
-	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigOC, pin ## _CHANNEL);	\
-	  HAL_TIM_PWM_Start(&htim, TIM_CHANNEL_1);							\
+	  htim.Instance = pin ## _TIMER;									                  \
+	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */						          \
+	  htim.Init.CounterMode = TIM_COUNTERMODE_DOWN;						            \
+	  htim.Init.Period = 0x0000;										                    \
+	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;					        \
+	  HAL_TIM_PWM_Init(&htim);											                    \
+    /* Output Control Config*/                                        \
+	  sConfigIC.OCMode = TIM_OCMODE_PWM1;								                \
+	  sConfigIC.Pulse = 0;												                      \
+	  sConfigIC.OCPolarity = TIM_OCPOLARITY_HIGH;						            \
+	  sConfigIC.OCFastMode = TIM_OCFAST_DISABLE;						            \
+	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigIC, pin ## _CHANNEL);	  \
+	  HAL_TIM_PWM_Start(&htim, TIM_CHANNEL_1);							            \
     }                                                                  \
     else {                                                             \
       SET_OUTPUT(pin);                                                 \

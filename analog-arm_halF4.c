@@ -12,7 +12,7 @@
 #include "delay.h"
 #include "temp.h"
 #include "stm32f4xx_hal_conf.h"  
-
+#include "stm32f4xx_hal_def.h"
 
 // DMA ADC-buffer
 #define OVERSAMPLE 6
@@ -22,7 +22,8 @@ volatile uint16_t BSS adc_buffer[2][NUM_TEMP_SENSORS * OVERSAMPLE];
 
 static ADC_HandleTypeDef hadc;
 static DMA_HandleTypeDef hdma;
-static ADC_ChannelConfTypeDef sConfig;
+static ADC_ChannelConfTypeDef sConfig;   
+
 
 // Private functions
 void init_analog(void);
@@ -31,7 +32,7 @@ void init_dma(void);
 
 static void DMA_MultiBuff_Start_IT(void);
 static void DMA_Base_Init();
-
+void custom_HAL_DMA_Init();
 
 /** Initialize the analog subsystem.
 
@@ -53,9 +54,9 @@ void analog_init() {
 */
 void init_analog() {
 
-  __HAL_RCC_ADC1_CLK_ENABLE();
+  uint8_t counter;
 
-    GPIO_InitTypeDef  igpio;
+  __HAL_RCC_ADC1_CLK_ENABLE();
 
   /*
    config analog pins
@@ -65,6 +66,9 @@ void init_analog() {
   */
   #undef DEFINE_TEMP_SENSOR
   #define DEFINE_TEMP_SENSOR(name, type, pin, additional)   \
+    GPIO_InitTypeDef  igpio;                                \
+    uint32_t channel = pin ## _ADC;                         \
+    uint32_t rank =  TEMP_SENSOR_ ## name;                  \
     igpio.Pin =  0x01 << pin ## _PIN;                       \
     igpio.Mode = GPIO_MODE_ANALOG;                          \
     igpio.Pull = GPIO_NOPULL;                               \
@@ -82,58 +86,26 @@ void init_analog() {
     hadc.Init.DMAContinuousRequests = ENABLE;               \
     hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;              \
     hadc.DMA_Handle = &hdma;                                \
+    HAL_GPIO_Init( pin ## _PORT , &igpio);                  \
     HAL_ADC_Init( &hadc );                                  \
-    sConfig.Channel = 1;                          \
-    sConfig.Rank = 1 ;                   \
+    sConfig.Channel = channel ;                             \
+    sConfig.Rank = (rank >0 ) ? rank : 1; /* at least 1 */  \
     sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;         \
-    HAL_ADC_ConfigChannel( &hadc, &sConfig );                            
+    sConfig.Offset = 0;                                     \
+    if (NUM_TEMP_SENSORS) {                                 \
+      HAL_ADC_ConfigChannel( &hadc, &sConfig );             \
+    }
+        
   #include "config_wrapper.h"               
   #undef DEFINE_TEMP_SENSOR
 
-
-
-  // for loop over each channel (0..15) for sequence
-  // // for PIO ## ADC >= 10 SRPR1 and ADC -10, else SMPR 2
-  // // 0x03 = 28 cycles
-  // #define DEFINE_TEMP_SENSOR(name, type, pin, additional) \
-                                              
-  // #include "config_wrapper.h"
-  // #undef DEFINE_TEMP_SENSOR
-
-
-
- 
-
-  // #define DEFINE_TEMP_SENSOR(name, type, pin, additional) \
-  // if (NUM_TEMP_SENSORS) { \
-  //   uint8_t subt = (pin ## _ADC > 9) ? 10 : 0; \
-  //   if (pin ## _ADC > 9) { \
-  //     ADC1->SMPR1 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
-  //   } else { \
-  //     ADC1->SMPR2 |= (uint32_t)0x03 << (3 * ((pin ## _ADC) - subt)); \
-  //   } \
-  //   subt = (TEMP_SENSOR_ ## name < 7) ? 0 : (TEMP_SENSOR_ ## name < 13) ? 7 : 13; \
-  //   if (TEMP_SENSOR_ ## name < 7) { \
-  //     ADC1->SQR3 |= pin ## _ADC << (5 * TEMP_SENSOR_ ## name - subt); \
-  //   } else \
-  //   if (TEMP_SENSOR_ ## name < 13) { \
-  //     ADC1->SQR2 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
-  //   } else { \
-  //     ADC1->SQR1 |= pin ## _ADC << (5 * (TEMP_SENSOR_ ## name - subt)); \
-  //   } \
-  // }
-  // #include "config_wrapper.h"
-  // #undef DEFINE_TEMP_SENSOR
-
-
-  /*
-   *  In order to use HAL with a double buffered DMA stream
-   *  we need to do a bit of tweaking. Only HAL_ADC_Start_DMA
-   *  sets the ADC_CR2_DMA bits. So we need to reset the DMA
-   *  to operate in double buffered mode after starting ADC
-   */
+   /*
+    *  In order to use HAL with a double buffered DMA stream
+    *  we need to do a bit of tweaking. Only HAL_ADC_Start_DMA
+    *  sets the ADC_CR2_DMA bits. So we need to reset the DMA
+    *  to operate in double buffered mode after starting ADC
+    */
   HAL_ADC_Start_DMA( &hadc , adc_buffer, NUM_TEMP_SENSORS ); 
-
 
 }
 
@@ -150,7 +122,6 @@ void init_dma() {
   DMA_MultiBuff_Start_IT();
 
   // while(!(DMA2_Stream4->CR & DMA_SxCR_EN));
-
   HAL_NVIC_SetPriority(DMA2_Stream4_IRQn,3,1);
 
 }
@@ -163,7 +134,7 @@ static void DMA_Base_Init(){
   */
   hdma.Instance = DMA2_Stream4;
   hdma.Init.Channel = DMA_CHANNEL_0;
-  hdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
+  hdma.Init.Direction = DMA_PERIPH_TO_MEMORY; //This feel like a HAL bug / miss naming
   hdma.Init.PeriphInc= DMA_PINC_DISABLE;
   hdma.Init.MemInc = DMA_MINC_ENABLE;
   hdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
@@ -174,38 +145,52 @@ static void DMA_Base_Init(){
   hdma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_1QUARTERFULL;
   hdma.Init.MemBurst = DMA_MBURST_SINGLE;
   hdma.Init.PeriphBurst = DMA_PBURST_SINGLE;
-
   HAL_DMA_Init(&hdma);
 
 }
 
-static void DMA_MultiBuff_Start_IT(){
+// static void DMA_MultiBuff_Start_IT(){
 
-  // 4. total number of data items
-  DMA2_Stream4->NDTR = NUM_TEMP_SENSORS * OVERSAMPLE;
+//   // //4. total number of data items
+//   // DMA2_Stream4->NDTR = NUM_TEMP_SENSORS * OVERSAMPLE;
 
   
-  // 2. perihperal port register address
-  DMA2_Stream4->PAR = (uint32_t)&ADC1->DR;
+//   // // 2. perihperal port register address
+//   // DMA2_Stream4->PAR = (uint32_t)&ADC1->DR;
 
-  // 3. memory address
-  DMA2_Stream4->M0AR = (uint32_t)&adc_buffer[0];
-  DMA2_Stream4->M1AR = (uint32_t)&adc_buffer[1];
+//   // // 3. memory address
+//   // DMA2_Stream4->M0AR = (uint32_t)&adc_buffer[0];
+//   // DMA2_Stream4->M1AR = (uint32_t)&adc_buffer[1];
 
-  DMA2_Stream4->CR |= DMA_SxCR_TCIE | DMA_SxCR_DBM | DMA_SxCR_EN;
+//   // DMA2_Stream4->CR |= DMA_SxCR_TCIE | DMA_SxCR_DBM | DMA_SxCR_EN;
 
+//    //   The HAL functions for ouble buffer look identical but
+//   //   do not produce the same results. It is possible (likely)
+//   //   that HAL the error handling in HAL functions is changing
+//   //   how things are set
+//   // HAL_DMAEx_MultiBufferStart_IT( &hdma, 
+//   //                              (uint32_t)&ADC1->DR,
+//   //                              (uint32_t)&adc_buffer[0],  
+//   //                              (uint32_t)&adc_buffer[1],
+//   //                              NUM_TEMP_SENSORS * OVERSAMPLE );
+// }
 
-  /*
-    The HAL functions for ouble buffer look identical but
-    do not produce the same results. It is possible (likely)
-    that HAL the error handling in HAL functions is changing
-    how things are set
-  */
-  // HAL_DMAEx_MultiBufferStart_IT( &hdma, 
-  //                              (uint32_t)&ADC1->DR,
-  //                              (uint32_t)&adc_buffer[0],  
-  //                              (uint32_t)&adc_buffer[1],
-  //                              NUM_TEMP_SENSORS * OVERSAMPLE );
+#define DMA_SET_PERH_ADDR(__HANDLE__, __ADDRESS_) ((__HANDLE__)->Instance->PAR = __ADDRESS_ )
+#define DMA_ENABLE_MULTIBUFFER(__HANDLE__)((__HANDLE__)->Instance->CR |= DMA_SxCR_DBM )
+
+void DMA_MultiBuff_Start_IT(){
+
+  __HAL_DMA_SET_COUNTER(&hdma, NUM_TEMP_SENSORS * OVERSAMPLE);
+
+  DMA_SET_PERH_ADDR(&hdma,(uint32_t)&ADC1->DR );
+
+  HAL_DMAEx_ChangeMemory(&hdma, (uint32_t)&adc_buffer[0] , MEMORY0);
+  HAL_DMAEx_ChangeMemory(&hdma, (uint32_t)&adc_buffer[1] , MEMORY1);
+
+ DMA_ENABLE_MULTIBUFFER(&hdma);
+
+  __HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TC);
+  __HAL_DMA_ENABLE(&hdma);
 
 }
 
@@ -273,7 +258,7 @@ void DMA2_Stream4_Handler(void) {
 
   if(__HAL_DMA_GET_FLAG( &hdma, __HAL_DMA_GET_TC_FLAG_INDEX(&hdma)) == SET ){
     __HAL_DMA_CLEAR_FLAG(&hdma, RESET);
-    HAL_ADC_Stop(&hadc);
+    // HAL_ADC_Stop(&hadc);
   }
   
 }
