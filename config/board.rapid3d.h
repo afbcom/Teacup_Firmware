@@ -166,7 +166,7 @@
 //DEFINE_TEMP_SENSORS_START
 //                 name      type           pin    additional
 DEFINE_TEMP_SENSOR(extruder, TT_THERMISTOR, PC_4,  THERMISTOR_EXTRUDER)
-DEFINE_TEMP_SENSOR(bed, TT_THERMISTOR, PB_1, THERMISTOR_BED)
+//DEFINE_TEMP_SENSOR(bed, TT_THERMISTOR, PB_1, THERMISTOR_BED)
 
 
 // Beta algorithm      r0      beta  r2    vadc
@@ -226,9 +226,9 @@ DEFINE_TEMP_SENSOR(bed, TT_THERMISTOR, PB_1, THERMISTOR_BED)
 //            name      pin      invert  pwm
 DEFINE_HEATER(extruder, PA_9,    0,      10000)
 
-DEFINE_HEATER(bed, PC_7, 0, 10000)
+//DEFINE_HEATER(bed, PC_7, 0, 10000)
 
-#define HEATER_BED HEATER_bed
+//#define HEATER_BED HEATER_bed
 
 #define HEATER_EXTRUDER HEATER_extruder
 //DEFINE_HEATERS_END
