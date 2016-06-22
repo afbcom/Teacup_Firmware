@@ -27,16 +27,18 @@
 
 UART_HandleTypeDef huart;
 
-void serial_init()
-{
+void serial_init(void){
+
+  GPIO_InitTypeDef  igpio; 
 
 	UART_CLK_ENABLE( SERIAL_UART );
+
   GPIO_CLK_ENABLE(SERIAL_TX_PORT );
   GPIO_CLK_ENABLE(SERIAL_RX_PORT ); 
 
+  GPIO_CONFIGURE_PIN( SERIAL_RX );
 	GPIO_CONFIGURE_PIN( SERIAL_TX );
-	GPIO_CONFIGURE_PIN( SERIAL_RX );
-
+	
 	UART_CONFIGURE( SERIAL );
 
 }
@@ -52,7 +54,9 @@ uint8_t serial_rxchars(void) {
 
 // /** Read one character.*/
 uint8_t serial_popchar(void) {
+
   uint8_t c = 0;
+
   HAL_UART_Receive(&huart, &c, 1 , SERIAL_TIMEOUT);
 
   return c;
