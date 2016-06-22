@@ -100,62 +100,7 @@
       LPC_IOCON->IO ## _CMSIS = (IO ## _OUTPUT | IO_MODEMASK_INACTIVE); \
     } while (0)
 
-#elif defined __ARM_STM32F411__
-  /**
-    Modified mbed-system of BSRR. Originally it is 32bit. Now we have low/high-bit
-    splitted in 2x16bit. Much easier to handle. Low-bit for HIGH and high-bit for LOW.
-  */
-  /// Read a pin.
-  #define _READ(IO) 		(IO ## _PORT->IDR & MASK(IO ## _PIN))
-  /// Write to a pin.
-  #define _WRITE(IO, v) \
-    do { \
-      if (v) \
-      	IO ## _PORT->BSRR = MASK(IO ## _PIN); \
-      else \
-      	IO ## _PORT->BSRR = MASK((IO ## _PIN + 16)); \
-    } while (0)
-
-  /** 
-    Set pins as input/output. Standard is input. MODER ist 32bit. 2bits for every pin.
-  */
-  /** Set pin as input.
-      - reset pullup
-      - set input mode
-  */
-  #define _SET_INPUT(IO) \
-    do { \
-      IO ## _PORT->PUPDR &= ~(3 << ((IO ## _PIN) << 1)); \
-      IO ## _PORT->MODER &= ~(3 << ((IO ## _PIN) << 1)); \
-    } while (0)
-  
-  /** Set pin as output.
-      - reset Pullup
-      - reset direction mode
-      - set output
-      - set speed
-  */
-  #define _SET_OUTPUT(IO) \
-    do { \
-      IO ## _PORT->PUPDR &= ~(3 << ((IO ## _PIN) << 1)); \
-      IO ## _PORT->MODER &= ~(3 << ((IO ## _PIN) << 1)); \
-      IO ## _PORT->MODER |= (1 << ((IO ## _PIN) << 1)); \
-      IO ## _PORT->OSPEEDR |= (3 << ((IO ## _PIN) << 1)); \
-    } while (0)
-
-  /// Enable pullup resistor.
-  #define _PULLUP_ON(IO) \
-    do { \
-      IO ## _PORT->PUPDR &= ~(3 << ((IO ## _PIN) << 1)); \
-      IO ## _PORT->PUPDR |= (1 << ((IO ## _PIN) << 1)); \
-    } while (0)
-  /// Disable pullup resistor.
-  #define _PULLUP_OFF(IO) \
-    do { \
-      IO ## _PORT->PUPDR &= ~(3 << ((IO ## _PIN) << 1)); \
-    } while (0)
-
-#elif defined __ARM_STM32F4HAL__
+#elif defined __ARM_STM32F4HAL__ || defined __ARM_STM32F411__
   /**
     Using HAL Library from STM wherever possible
   */
