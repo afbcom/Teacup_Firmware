@@ -13,6 +13,7 @@
 #include "pinio.h"
 #include "dda_queue.h"
 #include "stm32f4xx_hal_conf.h"  
+#include "hal_config.h" 
 
 
 /** Timer initialisation.
@@ -36,7 +37,8 @@ TIM_HandleTypeDef htim;
 
 
 void timer_init() {
-  __HAL_RCC_TIM5_CLK_ENABLE();  
+  
+  TIMER_CLK_ENABLE(STEPPER_TIMER);  
 /**
   Initialise the system tick timer
 
@@ -50,7 +52,7 @@ void timer_init() {
   HAL_NVIC_SetPriority(PendSV_IRQn, 2, 0);
 
   //Init with default values
-  htim.Instance = TIM5;
+  htim.Instance = STEPPER_TIMER;
   HAL_TIM_Base_Start(&htim);
 
   HAL_NVIC_SetPriority(TIM5_IRQn, 0, 0);           // Also highest priority.

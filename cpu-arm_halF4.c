@@ -15,12 +15,7 @@ void cpu_init() {
     Enable all periphals.
   */
     // Enable power and clocking for all GPIO
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-	__HAL_RCC_GPIOH_CLK_ENABLE();
-
+	GPIO_CLK_ENABLE(GPIO_CLK_ENABLE_ALL);
 }
 
 #endif /* defined TEACUP_C_INCLUDE && defined __ARMEL__ */
