@@ -30,9 +30,9 @@
 
     Valid range: 20 to 4'0960'000 (0.02 to 40960 steps/mm)
 */
-#define STEPS_PER_M_X            1000000
-#define STEPS_PER_M_Y            1000000
-#define STEPS_PER_M_Z            1000000
+#define STEPS_PER_M_X            400000
+#define STEPS_PER_M_Y            400000
+#define STEPS_PER_M_Z            400000
 #define STEPS_PER_M_E            96271
 
 /** \def MAXIMUM_FEEDRATE_X MAXIMUM_FEEDRATE_Y MAXIMUM_FEEDRATE_Z MAXIMUM_FEEDRATE_E
@@ -71,8 +71,8 @@
     Sane values: 0 to 20000   (0 to 20 mm)
     Valid range: 0 to 1000000
 */
-#define ENDSTOP_CLEARANCE_X      1000
-#define ENDSTOP_CLEARANCE_Y      1000
+#define ENDSTOP_CLEARANCE_X      500
+#define ENDSTOP_CLEARANCE_Y      500
 #define ENDSTOP_CLEARANCE_Z      100
 
 /** \def X_MIN X_MAX Y_MIN Y_MAX Z_MIN Z_MAX
