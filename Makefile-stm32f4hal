@@ -144,7 +144,6 @@ ifeq ($(MCU), lpc1114)
   SOURCES += cmsis-system_lpc11xx.c
 else ifeq ($(HAL), TRUE)
   SUBDIRS = $(shell find $(HALROOT) -type d)
-#  SOURCES += cmsis-system_stm32f4xx.c
   TEMPLIST := $(addsuffix /*,$(SUBDIRS))
   TEMPLIST := $(wildcard $(TEMPLIST))
   SOURCES += $(filter %.c,$(TEMPLIST))
@@ -173,11 +172,16 @@ else ifeq ($(HAL), TRUE)
   CFLAGS += -mthumb-interwork
   CFLAGS += -D__CORTEX_M4
   CFLAGS += -DARM_MATH_CM4
-#  CFLAGS += -D__FPU_PRESENT=1
-  CFLAGS += -D__ARM_STM32F411__
   CFLAGS += -D__ARM_STM32F4HAL__
   CFLAGS += $(addprefix -I,$(SUBDIRS))
 endif
+
+ifeq ($(MCU), stm32f401)
+  CFLAGS += -D__ARM_STM32F401__
+else ifeq ($(MCU), stm32f411)
+  CFLAGS += -D__ARM_STM32F411__
+endif
+
 # Other options ...
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
@@ -191,9 +195,9 @@ LDFLAGS  = --specs=nano.specs
 LDFLAGS += --specs=nosys.specs
 ifeq ($(MCU), lpc1114)
   LDFLAGS += -T cmsis-lpc1114.ld
-else ifeq ($(MCU), stm32f411)
-  LDFLAGS += -T cmsis-stm32f411xe.ld
 else ifeq ($(MCU), stm32f401)
+  LDFLAGS += -T cmsis-stm32f401xe.ld
+else ifeq ($(MCU), stm32f411)
   LDFLAGS += -T cmsis-stm32f411xe.ld
 endif
 LDFLAGS += -Wl,--as-needed
@@ -213,7 +217,6 @@ all: $(PROGRAM).hex $(BUILDDIR)/$(PROGRAM).lst $(BUILDDIR)/$(PROGRAM).sym size
 
 stm32f4hal:
 	@$(foreach dir,$(SUBDIRS),mkdir -p $(BUILDDIR)/$(dir))
-#	@echo "test-Subdirs"
 	@echo $(SUBDIRS)
 
 program: $(UPLOAD_FILE) config.h
