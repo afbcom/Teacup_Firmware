@@ -10,7 +10,7 @@
   Code here is heavily inspired by serial_api.c of MBED
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__ && 0
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F411__
 
 #include "arduino.h"
 #include "delay.h"

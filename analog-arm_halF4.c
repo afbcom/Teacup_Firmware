@@ -22,7 +22,7 @@ volatile uint16_t BSS adc_buffer[2][NUM_TEMP_SENSORS * OVERSAMPLE];
 
 static ADC_HandleTypeDef hadc;
 static DMA_HandleTypeDef hdma;
-static ADC_ChannelConfTypeDef sConfig;   
+static ADC_ChannelConfTypeDef sConfig;
 
 
 // Private functions
@@ -53,8 +53,6 @@ void analog_init() {
   Initialize the pins to analog mode, no pullup/no pulldown, highspeed
 */
 void init_analog() {
-
-  uint8_t counter;
 
   __HAL_RCC_ADC1_CLK_ENABLE();
 
@@ -105,7 +103,7 @@ void init_analog() {
     *  sets the ADC_CR2_DMA bits. So we need to reset the DMA
     *  to operate in double buffered mode after starting ADC
     */
-  HAL_ADC_Start_DMA( &hadc , adc_buffer, NUM_TEMP_SENSORS ); 
+  HAL_ADC_Start_DMA(&hadc, (uint32_t*)adc_buffer, NUM_TEMP_SENSORS); 
 
 }
 

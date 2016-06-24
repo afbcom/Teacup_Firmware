@@ -11,6 +11,7 @@
 #include "cpu-avr.c"
 #include "cpu-arm_lpc11xx.c"
 #include "cpu-arm_stm32f4xx.c"
+#include "cpu-arm_halF4.c"
 #undef TEACUP_C_INCLUDE
 
 /* No common code so far. */

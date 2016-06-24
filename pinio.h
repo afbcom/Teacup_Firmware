@@ -100,7 +100,7 @@
       LPC_IOCON->IO ## _CMSIS = (IO ## _OUTPUT | IO_MODEMASK_INACTIVE); \
     } while (0)
 
-#elif defined __ARM_STM32F4HAL__ || defined __ARM_STM32F411__
+#elif defined __ARM_STM32F4HAL__
   /**
     Using HAL Library from STM wherever possible
   */

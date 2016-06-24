@@ -9,6 +9,7 @@
 // Each ARM needs it's own file
 #include "delay-arm_lpc11xx.c"
 #include "delay-arm_stm32f4xx.c"
+#include "delay-arm_halF4.c"
 #undef TEACUP_C_INCLUDE
 
 #include "watchdog.h"

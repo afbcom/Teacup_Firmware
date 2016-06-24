@@ -151,7 +151,7 @@
    __HAL_RCC_GPIOD_CLK_ENABLE();}				    \
   else if (PORT == GPIOH) {                 \
    __HAL_RCC_GPIOH_CLK_ENABLE();}				    \
-  else if (PORT ==  GPIO_CLK_ENABLE_ALL){		\
+  else if (PORT == GPIO_CLK_ENABLE_ALL){		\
   __HAL_RCC_GPIOA_CLK_ENABLE();					    \
   __HAL_RCC_GPIOB_CLK_ENABLE();					    \
   __HAL_RCC_GPIOC_CLK_ENABLE();					    \
