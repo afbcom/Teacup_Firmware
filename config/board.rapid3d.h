@@ -46,8 +46,8 @@
 //#define TX_ENABLE_PIN            xxxx
 //#define RX_ENABLE_PIN            xxxx
 
-#define X_STEP_PIN               PC_13
-#define X_DIR_PIN                PC_14
+#define X_STEP_PIN               PC_14
+#define X_DIR_PIN                PC_13
 #define X_MIN_PIN                PB_4
 #define X_MAX_PIN                PB_14
 #define X_ENABLE_PIN             PB_7
