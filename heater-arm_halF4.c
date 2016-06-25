@@ -184,14 +184,14 @@ void heater_init() {
       /* Pin set-up */												                     	 \
       igpio.Pin = 0x01 << pin ## _PIN;                               \
 	  igpio.Mode = GPIO_MODE_AF_PP; 								 	                 \
-	  igpio.Pull = GPIO_PULLUP; 									 	                   \
+	  igpio.Pull = GPIO_NOPULL; 									 	                   \
 	  igpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 							           \
 	  HAL_GPIO_Init( pin ## _PORT , &igpio); 							             \
       freq = F_CPU / PWM_SCALE / (pwm ? pwm : 1); /* Figure PWM freq. */\
 	  	if (freq > 65535) freq = 65535;                                 \
 	    if (freq < 1) freq = 1;   /*  Timer Base config */              \
 	  htim.Instance = pin ## _TIMER;									                  \
-	  htim.Init.Prescaler = 0;  /* 1kHz   */						          \
+	  htim.Init.Prescaler = 0;  /* full clock source fed to timer */						          \
 	  htim.Init.CounterMode = TIM_COUNTERMODE_DOWN;						            \
 	  htim.Init.Period = freq-1;										                    \
 	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;					        \
@@ -200,9 +200,9 @@ void heater_init() {
 	  sConfigIC.OCMode = TIM_OCMODE_PWM1;								                \
 	  sConfigIC.Pulse = 0;												                      \
 	  sConfigIC.OCPolarity = TIM_OCPOLARITY_HIGH;						            \
-	  sConfigIC.OCFastMode = TIM_OCFAST_DISABLE;						            \
+	  sConfigIC.OCFastMode = TIM_OCFAST_ENABLE;						            \
 	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigIC, pin ## _CHANNEL);	  \
-	  HAL_TIM_PWM_Start(&htim,  COMPOUNDER(TIM_CHANNEL_, pin ## _CHANNEL) );							            \
+	  HAL_TIM_PWM_Start(&htim,  COMPOUNDER(TIM_CHANNEL_, COMPOUNDER(pin, _CHANNEL)) );							            \
     }                                                                  \
     else {                                                             \
       SET_OUTPUT(pin);                                                 \
@@ -233,7 +233,7 @@ void heater_set(heater_t index, uint8_t value) {
 
     if (heaters[index].uses_pwm) {
       // Remember, we scale, and duty cycle is inverted.
-      *heaters[index].ccr = (uint32_t)value * (PWM_SCALE / 255);
+      *heaters[index].ccr = (uint32_t)value * (8399 / 255);
 
       if (DEBUG_PID && (debug_flags & DEBUG_PID))
         sersendf_P(PSTR("PWM %su = %lu\n"), index, *heaters[index].ccr);
