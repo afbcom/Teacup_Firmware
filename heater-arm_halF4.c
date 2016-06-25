@@ -49,11 +49,14 @@
   frequency, so you should bother about PWM_SCALE only of you need frequencies
   below 6 Hz.
 */
-#define PWM_SCALE 255
+#define PWM_SCALE 1
 
 // some helper macros
 #define _EXPANDER(pre, val, post) pre ## val ## post
 #define EXPANDER(pre, val, post) _EXPANDER(pre, val, post)
+
+#define _COMPOUNDER(pre, post) pre ## post
+#define COMPOUNDER(pre, post) _COMPOUNDER(pre, post)
 
 /** \struct heater_definition_t
 
@@ -188,9 +191,9 @@ void heater_init() {
 	  	if (freq > 65535) freq = 65535;                                 \
 	    if (freq < 1) freq = 1;   /*  Timer Base config */              \
 	  htim.Instance = pin ## _TIMER;									                  \
-	  htim.Init.Prescaler = freq - 1;  /* 1kHz   */						          \
+	  htim.Init.Prescaler = 0;  /* 1kHz   */						          \
 	  htim.Init.CounterMode = TIM_COUNTERMODE_DOWN;						            \
-	  htim.Init.Period = 0x0000;										                    \
+	  htim.Init.Period = freq-1;										                    \
 	  htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;					        \
 	  HAL_TIM_PWM_Init(&htim);											                    \
     /* Output Control Config*/                                        \
@@ -199,12 +202,12 @@ void heater_init() {
 	  sConfigIC.OCPolarity = TIM_OCPOLARITY_HIGH;						            \
 	  sConfigIC.OCFastMode = TIM_OCFAST_DISABLE;						            \
 	  HAL_TIM_PWM_ConfigChannel(&htim, &sConfigIC, pin ## _CHANNEL);	  \
-	  HAL_TIM_PWM_Start(&htim, TIM_CHANNEL_1);							            \
+	  HAL_TIM_PWM_Start(&htim,  COMPOUNDER(TIM_CHANNEL_, pin ## _CHANNEL) );							            \
     }                                                                  \
     else {                                                             \
       SET_OUTPUT(pin);                                                 \
       WRITE(pin, invert ? 1 : 0);                                      \
-    }								
+    }
 
     #include "config_wrapper.h"
     #undef DEFINE_HEATER
