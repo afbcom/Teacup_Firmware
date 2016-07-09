@@ -38,9 +38,9 @@
 /** \def MAXIMUM_FEEDRATE_X MAXIMUM_FEEDRATE_Y MAXIMUM_FEEDRATE_Z MAXIMUM_FEEDRATE_E
   Used for G0 rapid moves and as a cap for all other feedrates.
 */
-#define MAXIMUM_FEEDRATE_X       6000
-#define MAXIMUM_FEEDRATE_Y       6000
-#define MAXIMUM_FEEDRATE_Z       200
+#define MAXIMUM_FEEDRATE_X       200
+#define MAXIMUM_FEEDRATE_Y       200
+#define MAXIMUM_FEEDRATE_Z       400
 #define MAXIMUM_FEEDRATE_E       6000
 
 /** \def SEARCH_FEEDRATE_X SEARCH_FEEDRATE_Y SEARCH_FEEDRATE_Z

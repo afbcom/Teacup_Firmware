@@ -35,8 +35,8 @@
 */
 #define MOTHERBOARD
 
-//#define __SYSTEM_CLOCK 84000000UL
-#define __SYSTEM_CLOCK 96000000UL
+#define __SYSTEM_CLOCK 84000000UL
+//#define __SYSTEM_CLOCK 96000000UL
 /***************************************************************************\
 *                                                                           *
 * 2. PINOUTS                                                                *
@@ -51,20 +51,20 @@
 #define X_MIN_PIN                PB_4
 #define X_MAX_PIN                PB_14
 #define X_ENABLE_PIN             PB_7
-//#define X_INVERT_DIR
-//#define X_INVERT_MIN
-//#define X_INVERT_MAX
-//#define X_INVERT_ENABLE
+#define X_INVERT_DIR
+#define X_INVERT_MIN
+#define X_INVERT_MAX
+#define X_INVERT_ENABLE
 
 #define Y_STEP_PIN               PA_0
 #define Y_DIR_PIN                PA_1
-#define Y_MIN_PIN                PB_5
-#define Y_MAX_PIN                PB_13
+//#define Y_MIN_PIN                PB_5
+//#define Y_MAX_PIN                PB_13
 #define Y_ENABLE_PIN             PC_15
 //#define Y_INVERT_DIR
-#define Y_INVERT_MIN
+//#define Y_INVERT_MIN
 //#define Y_INVERT_MAX
-//#define Y_INVERT_ENABLE
+#define Y_INVERT_ENABLE
 
 #define Z_STEP_PIN               PB_8
 #define Z_DIR_PIN                PC_8
@@ -72,15 +72,15 @@
 #define Z_MAX_PIN                PA_10
 #define Z_ENABLE_PIN             PC_9
 //#define Z_INVERT_DIR
-#define Z_INVERT_MIN
+//#define Z_INVERT_MIN
 //#define Z_INVERT_MAX
-//#define Z_INVERT_ENABLE
+#define Z_INVERT_ENABLE
 
 #define E_STEP_PIN               PA_8
 #define E_DIR_PIN                PB_15
 #define E_ENABLE_PIN             PB_2
 //#define E_INVERT_DIR
-//#define E_INVERT_ENABLE
+#define E_INVERT_ENABLE
 
 //#define PS_ON_PIN                DIO14
 //#define PS_MOSFET_PIN            xxxx
@@ -224,7 +224,7 @@ DEFINE_TEMP_SENSOR(extruder, TT_THERMISTOR, PC_4,  THERMISTOR_EXTRUDER)
 */
 //DEFINE_HEATERS_START
 //            name      pin      invert  pwm
-DEFINE_HEATER(extruder, PA_9,    0,      10000)
+DEFINE_HEATER(extruder, PB_10,    0,      10000)
 
 //DEFINE_HEATER(bed, PC_7, 0, 10000)
 
