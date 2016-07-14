@@ -364,10 +364,10 @@
 #define PC_7_TIMER    NO_TIMER
 #define PC_7_CHANNEL  1
 #define PC_7_INVERT   0
-// #define PC_7_AF       2
-// #define PC_7_TIMER    TIM3
-// #define PC_7_CHANNEL  2
-// #define PC_7_INVERT   0
+#define PC_7_AF       2
+#define PC_7_TIMER    TIM3
+#define PC_7_CHANNEL  2
+#define PC_7_INVERT   0
 
 #define PC_8_PIN      8
 #define PC_8_PORT     GPIOC
