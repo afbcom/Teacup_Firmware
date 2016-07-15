@@ -34,6 +34,9 @@ static void DMA_MultiBuff_Start_IT(void);
 static void DMA_Base_Init();
 void custom_HAL_DMA_Init();
 
+static GPIO_InitTypeDef igpio;
+static uint32_t channel;
+static uint32_t rank;
 /** Initialize the analog subsystem.
 
   Initialize the ADC and start hardware scan for all sensors.
@@ -64,9 +67,9 @@ void init_analog() {
   */
   #undef DEFINE_TEMP_SENSOR
   #define DEFINE_TEMP_SENSOR(name, type, pin, additional)   \
-    GPIO_InitTypeDef  igpio;                                \
-    uint32_t channel = pin ## _ADC;                         \
-    uint32_t rank =  TEMP_SENSOR_ ## name;                  \
+/*    GPIO_InitTypeDef  igpio;  */                              \
+    channel = pin ## _ADC;                         \
+    rank =  TEMP_SENSOR_ ## name;                  \
     igpio.Pin =  0x01 << pin ## _PIN;                       \
     igpio.Mode = GPIO_MODE_ANALOG;                          \
     igpio.Pull = GPIO_NOPULL;                               \
@@ -86,7 +89,7 @@ void init_analog() {
     hadc.DMA_Handle = &hdma;                                \
     HAL_GPIO_Init( pin ## _PORT , &igpio);                  \
     HAL_ADC_Init( &hadc );                                  \
-    sConfig.Channel = channel ;                             \
+    sConfig.Channel = channel;                             \
     sConfig.Rank = (rank >0 ) ? rank : 1; /* at least 1 */  \
     sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;         \
     sConfig.Offset = 0;                                     \

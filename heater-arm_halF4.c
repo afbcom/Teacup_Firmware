@@ -3,13 +3,13 @@
   \brief Manage heaters, including PID and PWM, ARM specific part.
 */
 
-#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__
+#if defined TEACUP_C_INCLUDE && defined __ARM_STM32F4HAL__ && 0
 
 #include "stm32f4xx.h"
 #include "pinio.h"
 #include "sersendf.h"
 #include "debug.h"
-#include "stm32f4xx_hal_conf.h"         
+#include "stm32f4xx_hal_conf.h"
 
 /**
   Test configuration.
