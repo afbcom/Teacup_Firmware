@@ -13,17 +13,22 @@
 #include "temp.h"
 #include "stm32f4xx_hal_conf.h"  
 #include "stm32f4xx_hal_def.h"
+#include "hal_config.h"
+
 
 // DMA ADC-buffer
 #define OVERSAMPLE 6
 #define SELECT_FROM_DOUBLE_BUFFER !(DMA2_Stream4->CR & DMA_SxCR_CT)  
+
 
 volatile uint16_t BSS adc_buffer[2][NUM_TEMP_SENSORS * OVERSAMPLE];
 
 static ADC_HandleTypeDef hadc;
 static DMA_HandleTypeDef hdma;
 static ADC_ChannelConfTypeDef sConfig;
-
+static GPIO_InitTypeDef igpio;
+static uint32_t channel;
+static uint32_t rank;
 
 // Private functions
 void init_analog(void);
@@ -34,9 +39,8 @@ static void DMA_MultiBuff_Start_IT(void);
 static void DMA_Base_Init();
 void custom_HAL_DMA_Init();
 
-static GPIO_InitTypeDef igpio;
-static uint32_t channel;
-static uint32_t rank;
+
+
 /** Initialize the analog subsystem.
 
   Initialize the ADC and start hardware scan for all sensors.
@@ -51,51 +55,17 @@ void analog_init() {
 
 }
 
-/** Initialize all analog pins from config
- 
-  Initialize the pins to analog mode, no pullup/no pulldown, highspeed
-*/
 void init_analog() {
 
-  __HAL_RCC_ADC1_CLK_ENABLE();
+  ANALOG_ADC_CLK_ENABLE(ANALOG_ADC);
 
-  /*
-   config analog pins
-   1. analog mode
-   2. no pullup
-   3. high speed
-  */
   #undef DEFINE_TEMP_SENSOR
   #define DEFINE_TEMP_SENSOR(name, type, pin, additional)   \
-/*    GPIO_InitTypeDef  igpio;  */                              \
-    channel = pin ## _ADC;                         \
-    rank =  TEMP_SENSOR_ ## name;                  \
-    igpio.Pin =  0x01 << pin ## _PIN;                       \
-    igpio.Mode = GPIO_MODE_ANALOG;                          \
-    igpio.Pull = GPIO_NOPULL;                               \
-    igpio.Speed = GPIO_SPEED_FREQ_HIGH;                     \
-    HAL_GPIO_Init( pin ## _PORT , &igpio);                  \
-    hadc.Instance = ADC1;                                   \
-    hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;    \
-    hadc.Init.ScanConvMode = ENABLE;                        \
-    hadc.Init.Resolution = ADC_RESOLUTION_10B;              \
-    hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;              \
-    hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;        \
-    hadc.Init.ContinuousConvMode = ENABLE;                  \
-    hadc.Init.DiscontinuousConvMode = DISABLE;              \
-    hadc.Init.NbrOfConversion = NUM_TEMP_SENSORS;           \
-    hadc.Init.DMAContinuousRequests = ENABLE;               \
-    hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;              \
-    hadc.DMA_Handle = &hdma;                                \
-    HAL_GPIO_Init( pin ## _PORT , &igpio);                  \
-    HAL_ADC_Init( &hadc );                                  \
-    sConfig.Channel = channel;                             \
-    sConfig.Rank = (rank >0 ) ? rank : 1; /* at least 1 */  \
-    sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;         \
-    sConfig.Offset = 0;                                     \
+    GPIO_CONFIGURE_PIN(igpio, additional);                  \
+    ADC_BASE_CONFIG( hadc, hdma, ANALOG_ADC);               \
     if (NUM_TEMP_SENSORS) {                                 \
-      HAL_ADC_ConfigChannel( &hadc, &sConfig );             \
-    }
+     ADC_CHANNEL_CONFIG(hadc, sConfig, ANALOG_ADC );        \
+    }   
         
   #include "config_wrapper.h"               
   #undef DEFINE_TEMP_SENSOR
@@ -115,80 +85,28 @@ void init_analog() {
 
 void init_dma() {
 
-  // Enable clock
-  __HAL_RCC_DMA2_CLK_ENABLE();
+  // Enable clck
+  DMA_CLK_ENABLE(ANALOG_DMA);
 
-  DMA_Base_Init();
-  // 10. Enable DMA-Stream
+  DMA_BASE_CONFIG(hdma, ANALOG_DMA);
+
   DMA_MultiBuff_Start_IT();
 
-  // while(!(DMA2_Stream4->CR & DMA_SxCR_EN));
-  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn,3,1);
-
+  HAL_NVIC_SetPriority(ANALOG_DMA_IRQN,3,1);
 }
 
-static void DMA_Base_Init(){
- /**
-    We have two DMA streams for ADC1. (DMA2_Stream0 and DMA2_Stream4)
-    We take DMA2 Stream4.
-    See reference manual 9.3.3 channel selection (p. 166)
-  */
-  hdma.Instance = DMA2_Stream4;
-  hdma.Init.Channel = DMA_CHANNEL_0;
-  hdma.Init.Direction = DMA_PERIPH_TO_MEMORY; //This feel like a HAL bug / miss naming
-  hdma.Init.PeriphInc= DMA_PINC_DISABLE;
-  hdma.Init.MemInc = DMA_MINC_ENABLE;
-  hdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-  hdma.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-  hdma.Init.Mode = DMA_CIRCULAR;
-  hdma.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-  hdma.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-  hdma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_1QUARTERFULL;
-  hdma.Init.MemBurst = DMA_MBURST_SINGLE;
-  hdma.Init.PeriphBurst = DMA_PBURST_SINGLE;
-  HAL_DMA_Init(&hdma);
 
-}
-
-// static void DMA_MultiBuff_Start_IT(){
-
-//   // //4. total number of data items
-//   // DMA2_Stream4->NDTR = NUM_TEMP_SENSORS * OVERSAMPLE;
-
-  
-//   // // 2. perihperal port register address
-//   // DMA2_Stream4->PAR = (uint32_t)&ADC1->DR;
-
-//   // // 3. memory address
-//   // DMA2_Stream4->M0AR = (uint32_t)&adc_buffer[0];
-//   // DMA2_Stream4->M1AR = (uint32_t)&adc_buffer[1];
-
-//   // DMA2_Stream4->CR |= DMA_SxCR_TCIE | DMA_SxCR_DBM | DMA_SxCR_EN;
-
-//    //   The HAL functions for ouble buffer look identical but
-//   //   do not produce the same results. It is possible (likely)
-//   //   that HAL the error handling in HAL functions is changing
-//   //   how things are set
-//   // HAL_DMAEx_MultiBufferStart_IT( &hdma, 
-//   //                              (uint32_t)&ADC1->DR,
-//   //                              (uint32_t)&adc_buffer[0],  
-//   //                              (uint32_t)&adc_buffer[1],
-//   //                              NUM_TEMP_SENSORS * OVERSAMPLE );
-// }
-
-#define DMA_SET_PERH_ADDR(__HANDLE__, __ADDRESS_) ((__HANDLE__)->Instance->PAR = __ADDRESS_ )
-#define DMA_ENABLE_MULTIBUFFER(__HANDLE__)((__HANDLE__)->Instance->CR |= DMA_SxCR_DBM )
 
 void DMA_MultiBuff_Start_IT(){
 
   __HAL_DMA_SET_COUNTER(&hdma, NUM_TEMP_SENSORS * OVERSAMPLE);
 
-  DMA_SET_PERH_ADDR(&hdma,(uint32_t)&ADC1->DR );
+  DMA_SET_PERH_ADDR(&hdma,(uint32_t)&ANALOG_ADC_INSTANCE->DR );
 
   HAL_DMAEx_ChangeMemory(&hdma, (uint32_t)&adc_buffer[0] , MEMORY0);
   HAL_DMAEx_ChangeMemory(&hdma, (uint32_t)&adc_buffer[1] , MEMORY1);
 
- DMA_ENABLE_MULTIBUFFER(&hdma);
+  DMA_ENABLE_MULTIBUFFER(&hdma);
 
   __HAL_DMA_ENABLE_IT(&hdma, DMA_IT_TC);
   __HAL_DMA_ENABLE(&hdma);
@@ -204,9 +122,6 @@ void DMA_MultiBuff_Start_IT(){
   \return Analog reading, 10-bit right aligned.
 
 */
-
-
-
 uint16_t analog_read(uint8_t index) {
   if (NUM_TEMP_SENSORS > 0) {
     // uint16_t buffer[NUM_TEMP_SENSORS * OVERSAMPLE];
@@ -255,7 +170,7 @@ void analog_tick(void) {
 
   Must have the same name as in cmsis-startup_stm32f411xe.s.
 */
-void DMA2_Stream4_Handler(void) {
+void ANALOG_DMA_IRQHandler(void) {
 
   if(__HAL_DMA_GET_FLAG( &hdma, __HAL_DMA_GET_TC_FLAG_INDEX(&hdma)) == SET ){
     __HAL_DMA_CLEAR_FLAG(&hdma, RESET);
